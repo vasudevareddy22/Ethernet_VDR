@@ -1,0 +1,36 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.npy
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Database lock and temporary files
+database.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Dynamic runtime uploads and exports
+uploads/traffic/*.csv
+exports/analyses/*.csv
+!uploads/traffic/.gitkeep
+!exports/analyses/.gitkeep
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/

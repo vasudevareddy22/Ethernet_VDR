@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Caregiver Dashboard – Smart Medication System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    /* ── Alert cards ── */
+    .alert-card {
+      background: #fff;
+      border-radius: 14px;
+      border-left: 5px solid var(--danger);
+      padding: 1rem 1.2rem;
+      margin-bottom: .8rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      position: relative;
+    }
+    .alert-card.unread { background: #fff5f5; }
+    .alert-card.read   { border-left-color: #cbd5e1; opacity: .8; }
+    .alert-icon { font-size: 1.6rem; flex-shrink: 0; margin-top: .1rem; }
+    .alert-body { flex: 1; }
+    .alert-body .alert-title {
+      font-weight: 700;
+      font-size: .95rem;
+      color: #dc2626;
+      margin-bottom: .3rem;
+    }
+    .alert-body.read .alert-title { color: #64748b; }
+    .alert-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: .3rem .8rem;
+      font-size: .82rem;
+      color: #475569;
+      margin-top: .4rem;
+    }
+    .alert-meta span { display: flex; gap: .3rem; align-items: center; }
+    .alert-time {
+      font-size: .75rem;
+      color: var(--muted);
+      white-space: nowrap;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .unread-dot {
+      width: 10px; height: 10px;
+      background: var(--danger);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: .4rem;
+    }
+
+    /* ── Patient section ── */
+    .patient-block {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .patient-header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      padding: 1.1rem 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .patient-header .ph-name { font-size: 1.1rem; font-weight: 700; flex: 1; }
+    .patient-header .ph-email { font-size: .8rem; opacity: .8; }
+    .ph-stat {
+      background: rgba(255,255,255,.15);
+      border-radius: 10px;
+      padding: .4rem .9rem;
+      text-align: center;
+      min-width: 80px;
+    }
+    .ph-stat .n { font-size: 1.3rem; font-weight: 800; }
+    .ph-stat .l { font-size: .7rem; opacity: .85; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* ── Mini adherence bar ── */
+    .adh-bar-wrap { padding: 0 1.4rem .4rem; }
+    .adh-bar-track { background: #e2e8f0; border-radius: 99px; height: 10px; overflow: hidden; }
+    .adh-bar-fill  { height: 100%; border-radius: 99px; transition: width .6s; }
+    .adh-bar-label { font-size: .78rem; color: var(--muted); margin-top: .25rem; display: flex; justify-content: space-between; }
+
+    /* ── Medication status table ── */
+    .med-status-table { width: 100%; border-collapse: collapse; }
+    .med-status-table th,
+    .med-status-table td { padding: .6rem 1rem; font-size: .88rem; text-align: left; border-bottom: 1px solid #f1f5f9; }
+    .med-status-table th { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: #f8fafc; }
+    .med-status-table tr:last-child td { border-bottom: none; }
+
+    /* ── History mini-table ── */
+    .history-mini { padding: 0 1.2rem 1.2rem; }
+    .history-mini-title { font-size: .8rem; font-weight: 700; color: var(--muted); text-transform: uppercase;
+                           letter-spacing: .06em; margin-bottom: .6rem; padding-top: .6rem;
+                           border-top: 1px solid #f1f5f9; }
+    .history-mini table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .history-mini th    { color: var(--muted); font-weight: 600; padding: .3rem .5rem; font-size: .75rem; }
+    .history-mini td    { padding: .3rem .5rem; border-bottom: 1px solid #f8fafc; }
+
+    /* ── Notification feed ── */
+    .notif-item {
+      padding: .75rem 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: .88rem;
+      display: flex;
+      align-items: flex-start;
+      gap: .8rem;
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item .ni-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .1rem; }
+    .notif-item .ni-body { flex: 1; }
+    .notif-item .ni-time { font-size: .75rem; color: var(--muted); white-space: nowrap; }
+    .notif-type-missed { color: var(--danger);  font-weight: 700; font-size: .75rem; }
+    .notif-type-taken  { color: var(--success); font-weight: 700; font-size: .75rem; }
+    .notif-type-reminder { color: var(--info);  font-weight: 700; font-size: .75rem; }
+
+    /* ── Tabs ── */
+    .section-tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .stab { background: #f1f5f9; border-radius: 99px; padding: .35rem .9rem; font-size: .82rem;
+             font-weight: 600; color: var(--muted); cursor: pointer; border: none; }
+    .stab.active { background: var(--primary); color: #fff; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+  <div class="brand">💊 SmartMed</div>
+  <nav>
+    <a href="{{ url_for('caregiver') }}" class="active">🩺 Caregiver Panel</a>
+    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+    {% if unread_alerts > 0 %}
+      <span id="alertBadge" class="badge-pill" title="Unread alerts" style="cursor:pointer;">
+        {{ unread_alerts }}
+      </span>
+    {% endif %}
+  </nav>
+</header>
+
+<main class="page">
+
+  <!-- Header -->
+  <div style="margin-bottom:1.5rem;">
+    <h1 style="font-size:1.5rem;">🩺 Caregiver Dashboard</h1>
+    <p style="color:var(--muted);">
+      Monitoring all patients — {{ session['user_name'] }} &nbsp;|&nbsp;
+      <strong>{{ today }}</strong>
+    </p>
+  </div>
+
+  <!-- Flash -->
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- ══════════════════════════════════════════
+       MISSED DOSE ALERTS
+  ═══════════════════════════════════════════ -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-header">
+      <h2 style="font-size:1.1rem;">⚠️ Missed Dose Alerts</h2>
+      <div style="display:flex;align-items:center;gap:.8rem;">
+        {% set unread_missed = alerts | selectattr('is_read', 'equalto', 0) | list | length %}
+        {% if unread_missed > 0 %}
+          <span class="badge-pill" style="position:static;font-size:.82rem;padding:.2rem .65rem;">
+            {{ unread_missed }} new
+          </span>
+        {% endif %}
+        {% if alerts %}
+          <button id="markAlertsRead"
+                  style="background:none;border:1px solid var(--muted);border-radius:8px;
+                         padding:.3rem .75rem;font-size:.8rem;cursor:pointer;color:var(--muted);">
+            Mark all read
+          </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if alerts %}
+      {% for a in alerts %}
+        <div class="alert-card {{ 'unread' if a.is_read == 0 else 'read' }}">
+          {% if a.is_read == 0 %}<div class="unread-dot"></div>{% endif %}
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-body {{ 'read' if a.is_read == 1 else '' }}">
+            <div class="alert-title">MISSED DOSE — {{ a.patient_name }}</div>
+            <div class="alert-meta">
+              <span>💊 <strong>{{ a.medicine_name or '—' }}</strong></span>
+              <span>⚖️ {{ a.dosage or '—' }}</span>
+              <span>🕐 {{ a.alert_sched_time or '—' }}</span>
+              <span>📅 {{ a.alert_sched_date or a.created_at[:10] }}</span>
+              <span style="font-size:.75rem;color:var(--muted);">Type: MISSED_DOSE</span>
+            </div>
+          </div>
+          <div class="alert-time">{{ a.created_at[:16] }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="icon">✅</div>
+        <p>No missed dose alerts. All patients are on track!</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PATIENT OVERVIEW
+  ═══════════════════════════════════════════ -->
+  <h2 style="font-size:1.15rem;margin-bottom:1rem;font-weight:700;">👥 Patient Overview – Today</h2>
+
+  {% if patient_data %}
+    {% for p in patient_data %}
+    <div class="patient-block">
+
+      <!-- Patient header bar -->
+      <div class="patient-header">
+        <div>
+          <div class="ph-name">👤 {{ p.name }}</div>
+          <div class="ph-email">{{ p.email }}</div>
+        </div>
+        <div class="ph-stat">
+          <div class="n">{{ p.today_total }}</div>
+          <div class="l">Total</div>
+        </div>
+        <div class="ph-stat" style="background:rgba(34,197,94,.25);">
+          <div class="n">{{ p.today_taken }}</div>
+          <div class="l">✅ Taken</div>
+        </div>
+        <div class="ph-stat" style="background:rgba(239,68,68,.25);">
+          <div class="n">{{ p.today_missed }}</div>
+          <div class="l">❌ Missed</div>
+        </div>
+        <div class="ph-stat" style="background:rgba(245,158,11,.25);">
+          <div class="n">{{ p.today_pending }}</div>
+          <div class="l">⏳ Pending</div>
+        </div>
+      </div>
+
+      <!-- Adherence bars -->
+      <div class="adh-bar-wrap" style="padding-top:.8rem;">
+        <div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.3rem;">
+          Today's Adherence
+        </div>
+        <div class="adh-bar-track">
+          <div class="adh-bar-fill"
+               style="width:{{ p.today_pct }}%;
+                      background:{% if p.today_pct >= 80 %}var(--success){% elif p.today_pct >= 50 %}var(--warning){% else %}var(--danger){% endif %};">
+          </div>
+        </div>
+        <div class="adh-bar-label">
+          <span>0%</span>
+          <span style="font-weight:700;color:{% if p.today_pct >= 80 %}var(--success){% elif p.today_pct >= 50 %}var(--warning){% else %}var(--danger){% endif %};">
+            {{ p.today_pct }}%
+          </span>
+          <span>100%</span>
+        </div>
+      </div>
+      <div class="adh-bar-wrap" style="padding-top:.4rem;padding-bottom:.6rem;">
+        <div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:.3rem;">
+          Weekly Adherence (7 days)
+        </div>
+        <div class="adh-bar-track" style="height:7px;">
+          <div class="adh-bar-fill"
+               style="width:{{ p.week_pct }}%;background:#818cf8;">
+          </div>
+        </div>
+        <div class="adh-bar-label">
+          <span></span>
+          <span style="font-weight:700;color:#4f46e5;">{{ p.week_pct }}%</span>
+          <span></span>
+        </div>
+      </div>
+
+      <!-- Today's medication status table -->
+      {% if p.today_meds %}
+      <div style="overflow-x:auto;padding:0 1.2rem .8rem;">
+        <div style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+                    letter-spacing:.06em;margin-bottom:.5rem;">
+          Medication Status
+        </div>
+        <table class="med-status-table">
+          <thead>
+            <tr>
+              <th>Medicine</th>
+              <th>Dosage</th>
+              <th>Scheduled Time</th>
+              <th>Status</th>
+              <th>Confirmed At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in p.today_meds %}
+            <tr>
+              <td><strong>{{ m.medicine_name }}</strong></td>
+              <td>{{ m.dosage }}</td>
+              <td>{{ m.scheduled_time }}</td>
+              <td>
+                {% if m.status == 'taken' %}
+                  <span class="badge badge-taken">✅ TAKEN</span>
+                {% elif m.status == 'missed' %}
+                  <span class="badge badge-missed">❌ MISSED</span>
+                {% else %}
+                  <span class="badge badge-pending">⏳ PENDING</span>
+                {% endif %}
+              </td>
+              <td style="font-size:.82rem;color:var(--muted);">
+                {{ m.confirmed_at[11:16] if m.confirmed_at else '—' }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="padding:1rem 1.4rem;color:var(--muted);font-size:.88rem;">
+        No medications scheduled for today.
+      </div>
+      {% endif %}
+
+      <!-- Recent history (last 7 days) -->
+      {% if p.recent %}
+      <div class="history-mini">
+        <div class="history-mini-title">Recent History (last 7 days)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Medicine</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Confirmed</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in p.recent %}
+            <tr>
+              <td>{{ r.scheduled_date }}</td>
+              <td>{{ r.medicine_name }}</td>
+              <td>{{ r.scheduled_time }}</td>
+              <td>
+                {% if r.status == 'taken' %}
+                  <span class="badge badge-taken" style="font-size:.73rem;">✅</span>
+                {% elif r.status == 'missed' %}
+                  <span class="badge badge-missed" style="font-size:.73rem;">❌</span>
+                {% else %}
+                  <span class="badge badge-pending" style="font-size:.73rem;">⏳</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--muted);">{{ r.confirmed_at[11:16] if r.confirmed_at else '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state" style="margin-bottom:1.5rem;">
+      <div class="icon">👥</div>
+      <p>No patients registered yet.</p>
+    </div>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════
+       ALL RECENT NOTIFICATIONS
+  ═══════════════════════════════════════════ -->
+  <div class="card">
+    <div class="section-header">
+      <h2 style="font-size:1.1rem;">🔔 All Recent Notifications</h2>
+      {% set unread = notifications | selectattr('is_read', 'equalto', 0) | list | length %}
+      {% if unread > 0 %}
+        <span class="badge-pill" style="position:static;font-size:.82rem;padding:.2rem .65rem;">
+          {{ unread }} unread
+        </span>
+      {% endif %}
+    </div>
+
+    {% if notifications %}
+      {% for n in notifications %}
+        <div class="notif-item">
+          <div class="ni-icon">
+            {% if n.type == 'missed' %}⚠️{% elif n.type == 'taken' %}✅{% else %}🔔{% endif %}
+          </div>
+          <div class="ni-body">
+            <span class="notif-type-{{ n.type }}">
+              {% if n.type == 'missed' %}MISSED_DOSE
+              {% elif n.type == 'taken' %}MEDICATION_TAKEN
+              {% else %}MEDICATION_REMINDER{% endif %}
+            </span>
+            &nbsp;
+            <strong>{{ n.patient_name }}</strong> — {{ n.message }}
+          </div>
+          <div class="ni-time">{{ n.created_at[:16] }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="icon">🔕</div>
+        <p>No notifications yet.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+// Mark all alerts as read
+const markBtn = document.getElementById('markAlertsRead');
+if (markBtn) {
+  markBtn.addEventListener('click', function () {
+    fetch('/api/caregiver/alerts/read', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function () {
+        // Fade out unread dots and badges
+        document.querySelectorAll('.unread-dot').forEach(function(d){ d.remove(); });
+        document.querySelectorAll('.alert-card.unread').forEach(function(c){
+          c.classList.replace('unread', 'read');
+        });
+        const badge = document.getElementById('alertBadge');
+        if (badge) badge.remove();
+        markBtn.textContent = 'All read';
+        markBtn.disabled = true;
+      });
+  });
+}
+
+// Badge click to mark read
+const badge = document.getElementById('alertBadge');
+if (badge) {
+  badge.addEventListener('click', function () {
+    if (markBtn) markBtn.click();
+  });
+}
+</script>
+
+</body>
+</html>

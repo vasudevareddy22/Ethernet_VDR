@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Analytics – Smart Medication System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      padding: 1.1rem 1rem;
+      text-align: center;
+      border-top: 4px solid var(--primary);
+    }
+    .kpi.green  { border-top-color: var(--success); }
+    .kpi.red    { border-top-color: var(--danger);  }
+    .kpi.yellow { border-top-color: var(--warning); }
+    .kpi.blue   { border-top-color: var(--info);    }
+    .kpi.purple { border-top-color: #7c3aed; }
+    .kpi .big   { font-size: 2.2rem; font-weight: 800; color: #1e293b; line-height: 1.1; }
+    .kpi .lbl   { font-size: .76rem; color: var(--muted); margin-top: .3rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+    .med-bar-row { margin-bottom: .9rem; }
+    .med-bar-row .name { font-size: .9rem; font-weight: 600; margin-bottom: .3rem; }
+    .med-bar-track { background: #e2e8f0; border-radius: 99px; height: 12px; overflow: hidden; }
+    .med-bar-fill  { height: 100%; border-radius: 99px; }
+    .med-bar-meta  { font-size: .78rem; color: var(--muted); margin-top: .2rem; display: flex; gap: .8rem; }
+
+    .charts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+  <div class="brand">💊 SmartMed</div>
+  <nav>
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('medications') }}">💊 My Meds</a>
+    <a href="{{ url_for('add_medicine') }}">➕ Add Med</a>
+    <a href="{{ url_for('history') }}">📋 History</a>
+    <a href="{{ url_for('analytics') }}" class="active">📊 Analytics</a>
+    <a href="{{ url_for('tests') }}">🧪 Tests</a>
+    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+  </nav>
+</header>
+
+<main class="page">
+
+  <div style="margin-bottom:1.4rem;">
+    <h1 style="font-size:1.5rem;font-weight:800;">📊 Adherence Analytics</h1>
+    <p style="color:var(--muted);font-size:.88rem;">
+      All statistics come from your live SQLite database — {{ today }}.
+      <em style="color:#64748b;"> (Student software prototype — not clinical data.)</em>
+    </p>
+  </div>
+
+  <!-- ══ TODAY & WEEK KPI STRIP ══ -->
+  <div class="kpi-grid">
+    <div class="kpi blue">
+      <div class="big">{{ today_pct }}%</div>
+      <div class="lbl">Today's Adherence</div>
+    </div>
+    <div class="kpi purple">
+      <div class="big">{{ week_pct }}%</div>
+      <div class="lbl">Weekly Adherence</div>
+    </div>
+    <div class="kpi">
+      <div class="big">{{ all_pct }}%</div>
+      <div class="lbl">All-time Adherence</div>
+    </div>
+    <div class="kpi green">
+      <div class="big">{{ week_taken }}</div>
+      <div class="lbl">Taken (7 days)</div>
+    </div>
+    <div class="kpi red">
+      <div class="big">{{ week_missed }}</div>
+      <div class="lbl">Missed (7 days)</div>
+    </div>
+    <div class="kpi yellow">
+      <div class="big">{{ week_pend }}</div>
+      <div class="lbl">Pending (7 days)</div>
+    </div>
+  </div>
+
+  <!-- ══ CHARTS ROW ══ -->
+  <div class="charts-row">
+
+    <!-- Weekly adherence bar -->
+    <div class="card" style="margin-bottom:0;">
+      <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1rem;">
+        📈 Weekly Adherence (Last 7 Days)
+      </h2>
+      <div class="chart-wrap">
+        <canvas id="analyticsWeeklyChart"
+                data-labels='{{ chart_labels | tojson }}'
+                data-values='{{ chart_data  | tojson }}'></canvas>
+      </div>
+    </div>
+
+    <!-- Taken vs Missed doughnut -->
+    <div class="card" style="margin-bottom:0;">
+      <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:.5rem;">
+        🥧 Taken vs Missed vs Pending (7 days)
+      </h2>
+      <div class="chart-wrap">
+        <canvas id="analyticsDonut"
+                data-taken="{{ donut_taken }}"
+                data-missed="{{ donut_missed }}"
+                data-pending="{{ week_pend }}"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ ALL-TIME TOTALS ══ -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1rem;">📋 All-Time Summary</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;">
+      <div style="text-align:center;">
+        <div style="font-size:1.8rem;font-weight:800;">{{ all_total }}</div>
+        <div style="font-size:.78rem;color:var(--muted);text-transform:uppercase;">Total Doses</div>
+      </div>
+      <div style="text-align:center;color:var(--success);">
+        <div style="font-size:1.8rem;font-weight:800;">{{ all_taken }}</div>
+        <div style="font-size:.78rem;text-transform:uppercase;">✅ Taken</div>
+      </div>
+      <div style="text-align:center;color:var(--danger);">
+        <div style="font-size:1.8rem;font-weight:800;">{{ all_missed }}</div>
+        <div style="font-size:.78rem;text-transform:uppercase;">❌ Missed</div>
+      </div>
+      <div style="text-align:center;color:var(--warning);">
+        <div style="font-size:1.8rem;font-weight:800;">{{ all_pending }}</div>
+        <div style="font-size:.78rem;text-transform:uppercase;">⏳ Pending</div>
+      </div>
+      <div style="text-align:center;color:var(--primary);">
+        <div style="font-size:1.8rem;font-weight:800;">{{ all_pct }}%</div>
+        <div style="font-size:.78rem;text-transform:uppercase;">Adherence Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PER-MEDICATION BREAKDOWN ══ -->
+  {% if med_stats %}
+  <div class="card">
+    <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:1.2rem;">
+      💊 Per-Medication Adherence (7 Days)
+    </h2>
+    {% for m in med_stats %}
+    <div class="med-bar-row">
+      <div class="name">
+        {{ m.name }}
+        <span style="float:right;font-size:.82rem;font-weight:700;
+               color:{% if m.pct >= 80 %}var(--success){% elif m.pct >= 50 %}var(--warning){% else %}var(--danger){% endif %}">
+          {{ m.pct }}%
+        </span>
+      </div>
+      <div class="med-bar-track">
+        <div class="med-bar-fill"
+             style="width:{{ m.pct }}%;
+                    background:{% if m.pct >= 80 %}var(--success){% elif m.pct >= 50 %}var(--warning){% else %}var(--danger){% endif %};">
+        </div>
+      </div>
+      <div class="med-bar-meta">
+        <span style="color:var(--success);">✅ {{ m.taken }} taken</span>
+        <span style="color:var(--danger);">❌ {{ m.missed }} missed</span>
+        <span style="color:var(--warning);">⏳ {{ m.pending }} pending</span>
+        <span>/ {{ m.total }} total</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ══ DISCLAIMER ══ -->
+  <div style="background:#f8fafc;border-radius:10px;padding:.9rem 1.2rem;font-size:.82rem;color:var(--muted);margin-top:.5rem;">
+    <strong>Note:</strong> This is a student software prototype for demonstration purposes only.
+    All data shown is sourced from the local SQLite database (<code>database.db</code>).
+    Results do not represent clinical medical advice or validated health outcomes.
+  </div>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

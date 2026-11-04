@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Medication Reminder – Smart Medication System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    /* ── Full-page reminder layout ── */
+    .reminder-page {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    /* ── Pulsing bell ── */
+    .bell-wrap {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      animation: bellRing 1.2s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px rgba(251,191,36,.6));
+    }
+    @keyframes bellRing {
+      0%,100% { transform: rotate(0deg);   }
+      15%      { transform: rotate(-18deg); }
+      30%      { transform: rotate(18deg);  }
+      45%      { transform: rotate(-10deg); }
+      60%      { transform: rotate(10deg);  }
+      75%      { transform: rotate(-4deg);  }
+    }
+
+    /* ── Reminder card ── */
+    .reminder-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      max-width: 460px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0,0,0,.4);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .reminder-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b);
+      background-size: 200%;
+      animation: gradientSlide 2s linear infinite;
+    }
+    @keyframes gradientSlide {
+      0%   { background-position: 0%; }
+      100% { background-position: 200%; }
+    }
+
+    .reminder-header {
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      color: #ef4444;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+    }
+    .reminder-header::before,
+    .reminder-header::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #fecaca;
+    }
+
+    .medicine-name {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: .3rem;
+      line-height: 1.1;
+    }
+    .medicine-dosage {
+      font-size: 1.15rem;
+      color: #4f46e5;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    .time-box {
+      background: #f0f9ff;
+      border: 2px solid #bae6fd;
+      border-radius: 12px;
+      padding: .8rem 1.2rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+    }
+    .time-box .time-label {
+      font-size: .75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 600;
+    }
+    .time-box .time-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #0284c7;
+      letter-spacing: .04em;
+    }
+
+    .prompt-text {
+      font-size: 1.05rem;
+      color: #475569;
+      margin-bottom: 2rem;
+      font-weight: 500;
+    }
+
+    .reminder-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .btn-taken {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 6px 20px rgba(22,163,74,.35);
+      text-decoration: none;
+      min-width: 160px;
+      justify-content: center;
+    }
+    .btn-taken:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(22,163,74,.5);
+    }
+    .btn-taken:active { transform: translateY(0); }
+
+    .btn-missed {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 6px 20px rgba(220,38,38,.35);
+      text-decoration: none;
+      min-width: 160px;
+      justify-content: center;
+    }
+    .btn-missed:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(220,38,38,.5);
+    }
+    .btn-missed:active { transform: translateY(0); }
+
+    .skip-link {
+      display: block;
+      text-align: center;
+      color: #94a3b8;
+      font-size: .85rem;
+      margin-top: .8rem;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .skip-link:hover { color: #64748b; }
+
+    /* ── Already confirmed overlay ── */
+    .already-confirmed {
+      background: #f0fdf4;
+      border: 2px solid #bbf7d0;
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    .already-confirmed .big-icon { font-size: 3rem; margin-bottom: .5rem; }
+    .already-confirmed h2 { color: #166534; margin-bottom: .3rem; }
+    .already-confirmed p  { color: #4b7a5e; font-size: .9rem; }
+
+    /* ── Countdown timer ── */
+    .countdown-wrap {
+      font-size: .82rem;
+      color: #94a3b8;
+      margin-top: 1.2rem;
+    }
+    .countdown-wrap span { font-weight: 700; color: #f59e0b; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<header class="navbar">
+  <div class="brand">💊 SmartMed</div>
+  <nav>
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('medications') }}">💊 My Meds</a>
+    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+  </nav>
+</header>
+
+<div class="reminder-page">
+
+  <!-- Bell -->
+  <div class="bell-wrap">🔔</div>
+
+  {% if adh.status != 'pending' %}
+  <!-- Already confirmed -->
+  <div class="already-confirmed">
+    <div class="big-icon">
+      {% if adh.status == 'taken' %}✅{% else %}❌{% endif %}
+    </div>
+    <h2>Already {{ adh.status | capitalize }}</h2>
+    <p>
+      <strong>{{ med.medicine_name }}</strong> was marked as
+      <strong>{{ adh.status }}</strong>
+      {% if adh.confirmed_at %}at {{ adh.confirmed_at[11:16] }}{% endif %}.
+    </p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary" style="margin-top:1.2rem;">
+      Back to Dashboard
+    </a>
+  </div>
+
+  {% else %}
+  <!-- Reminder Card -->
+  <div class="reminder-card">
+
+    <div class="reminder-header">Medication Reminder</div>
+
+    <div class="medicine-name">{{ med.medicine_name }}</div>
+    <div class="medicine-dosage">{{ med.dosage }}</div>
+
+    <div class="time-box">
+      <div class="time-label">Scheduled Time</div>
+      <div class="time-value">{{ display_time }}</div>
+    </div>
+
+    <p class="prompt-text">Have you taken this medicine?</p>
+
+    <div class="reminder-actions">
+      <a href="{{ url_for('confirm', adh_id=adh.id, status='taken') }}?next={{ url_for('dashboard') }}"
+         class="btn-taken"
+         onclick="return confirmAction('taken')">
+        &#10003; TAKEN
+      </a>
+      <a href="{{ url_for('confirm', adh_id=adh.id, status='missed') }}?next={{ url_for('dashboard') }}"
+         class="btn-missed"
+         id="missedBtn"
+         onclick="return confirmAction('missed')">
+        &#10005; MISSED
+      </a>
+    </div>
+
+    <a href="{{ url_for('dashboard') }}" class="skip-link">
+      Remind me later (go back)
+    </a>
+
+    <!-- Auto-dismiss countdown -->
+    <div class="countdown-wrap" id="countdownWrap">
+      This reminder will expire in <span id="countdown">5:00</span>
+    </div>
+
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+  // Confirm before marking missed
+  function confirmAction(status) {
+    if (status === 'missed') {
+      return confirm('Are you sure you want to mark this as MISSED?');
+    }
+    return true;
+  }
+
+  // 5-minute countdown
+  const cdEl = document.getElementById('countdown');
+  if (cdEl) {
+    let secs = 300;
+    const timer = setInterval(() => {
+      secs--;
+      if (secs <= 0) {
+        clearInterval(timer);
+        document.getElementById('countdownWrap').innerHTML =
+          '<span style="color:#ef4444;">Reminder expired. Returning to dashboard...</span>';
+        setTimeout(() => { window.location.href = "{{ url_for('dashboard') }}"; }, 1500);
+        return;
+      }
+      const m = Math.floor(secs / 60);
+      const s = String(secs % 60).padStart(2, '0');
+      cdEl.textContent = m + ':' + s;
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>

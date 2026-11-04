@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adherence History – Smart Medication System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── Filter tabs ── */
+    .filter-tabs {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .filter-tab {
+      padding: .45rem 1.1rem;
+      border-radius: 99px;
+      font-size: .88rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      transition: background .15s, color .15s;
+    }
+    .filter-tab:hover,
+    .filter-tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* ── Adherence summary cards ── */
+    .adh-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .adh-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.1rem 1rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      border-top: 4px solid var(--primary);
+    }
+    .adh-card.green  { border-top-color: var(--success); }
+    .adh-card.red    { border-top-color: var(--danger);  }
+    .adh-card.yellow { border-top-color: var(--warning); }
+    .adh-card.blue   { border-top-color: var(--info);    }
+    .adh-card .big   { font-size: 2rem; font-weight: 800; color: #1e293b; line-height: 1; }
+    .adh-card .lbl   { font-size: .78rem; color: var(--muted); margin-top: .3rem; font-weight: 600; text-transform: uppercase; letter-spacing:.04em; }
+
+    /* ── Confirmed time display ── */
+    .conf-taken  { color: var(--success); font-size: .83rem; }
+    .conf-missed { color: var(--danger);  font-size: .83rem; }
+    .conf-pend   { color: var(--warning); font-size: .83rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+  <div class="brand">💊 SmartMed</div>
+  <nav>
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('medications') }}">💊 My Meds</a>
+    <a href="{{ url_for('add_medicine') }}">➕ Add Med</a>
+    <a href="{{ url_for('history') }}" class="active">📋 History</a>
+    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+  </nav>
+</header>
+
+<main class="page">
+
+  <div style="margin-bottom:1.2rem;">
+    <h1 style="font-size:1.5rem;">📋 Adherence History &amp; Analytics</h1>
+    <p style="color:var(--muted);">Your complete medication adherence record.</p>
+  </div>
+
+  <!-- ── ADHERENCE SUMMARY CARDS ── -->
+  <div class="adh-cards">
+    <div class="adh-card blue">
+      <div class="big">{{ today_pct }}%</div>
+      <div class="lbl">Today's Adherence</div>
+    </div>
+    <div class="adh-card green">
+      <div class="big">{{ week_pct }}%</div>
+      <div class="lbl">Weekly Adherence</div>
+    </div>
+    <div class="adh-card">
+      <div class="big">{{ adherence_pct }}%</div>
+      <div class="lbl">Period Adherence</div>
+    </div>
+    <div class="adh-card green">
+      <div class="big">{{ taken_doses }}</div>
+      <div class="lbl">✅ Taken</div>
+    </div>
+    <div class="adh-card red">
+      <div class="big">{{ missed_doses }}</div>
+      <div class="lbl">❌ Missed</div>
+    </div>
+    <div class="adh-card yellow">
+      <div class="big">{{ pend_doses }}</div>
+      <div class="lbl">⏳ Pending</div>
+    </div>
+  </div>
+
+  <!-- ── FILTER TABS ── -->
+  <div class="filter-tabs">
+    <a href="{{ url_for('history', filter='today') }}"
+       class="filter-tab {% if filter == 'today' %}active{% endif %}">Today</a>
+    <a href="{{ url_for('history', filter='week') }}"
+       class="filter-tab {% if filter == 'week' %}active{% endif %}">This Week</a>
+    <a href="{{ url_for('history', filter='month') }}"
+       class="filter-tab {% if filter == 'month' %}active{% endif %}">This Month</a>
+    <a href="{{ url_for('history', filter='all') }}"
+       class="filter-tab {% if filter == 'all' or not filter %}active{% endif %}">All Time</a>
+  </div>
+
+  <!-- ── 7-DAY CHART ── -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <h2 style="font-size:1.1rem;margin-bottom:1rem;">📊 7-Day Adherence Chart</h2>
+    <div class="chart-wrap">
+      <canvas id="adherenceChart"
+              data-labels='{{ chart_labels | tojson }}'
+              data-values='{{ chart_data  | tojson }}'></canvas>
+    </div>
+  </div>
+
+  <!-- ── HISTORY TABLE ── -->
+  <div class="card">
+    <div class="section-header">
+      <h2 style="font-size:1.1rem;">
+        📅 Records
+        {% if filter == 'today' %}— Today
+        {% elif filter == 'week' %}— This Week
+        {% elif filter == 'month' %}— This Month
+        {% else %}— All Time
+        {% endif %}
+        <span style="font-size:.82rem;font-weight:400;color:var(--muted);">({{ records | length }} records)</span>
+      </h2>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-sm">← Back to Dashboard</a>
+    </div>
+
+    {% if records %}
+    <div style="overflow-x:auto;">
+      <table class="med-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Medicine</th>
+            <th>Dosage</th>
+            <th>Scheduled Time</th>
+            <th>Status</th>
+            <th>Confirmed At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td style="font-size:.85rem;">{{ r.scheduled_date }}</td>
+            <td><strong>{{ r.medicine_name }}</strong></td>
+            <td>{{ r.dosage }}</td>
+            <td>🕐 {{ r.scheduled_time }}</td>
+            <td>
+              {% if r.status == 'taken' %}
+                <span class="badge badge-taken">✅ TAKEN</span>
+              {% elif r.status == 'missed' %}
+                <span class="badge badge-missed">❌ MISSED</span>
+              {% else %}
+                <span class="badge badge-pending">⏳ PENDING</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if r.confirmed_at %}
+                {% if r.status == 'taken' %}
+                  <span class="conf-taken">{{ r.confirmed_at[11:16] }}</span>
+                {% else %}
+                  <span class="conf-missed">{{ r.confirmed_at[11:16] }}</span>
+                {% endif %}
+              {% else %}
+                <span class="conf-pend">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="icon">📭</div>
+      <p>No adherence records for this period.</p>
+      <a href="{{ url_for('add_medicine') }}" class="btn btn-primary" style="margin-top:1rem;">➕ Add a Medication</a>
+    </div>
+    {% endif %}
+  </div>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

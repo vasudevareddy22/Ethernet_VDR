@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Test Cases – Smart Medication System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    .tc-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .tc-table th {
+      background: #1e293b; color: #fff;
+      padding: .65rem .9rem; text-align: left; font-weight: 600;
+      font-size: .78rem; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .tc-table td {
+      padding: .65rem .9rem; border-bottom: 1px solid #e2e8f0;
+      vertical-align: top; line-height: 1.45;
+    }
+    .tc-table tr:last-child td { border-bottom: none; }
+    .tc-table tr:hover td { background: #f8fafc; }
+
+    .tc-id    { font-weight: 800; color: var(--primary); white-space: nowrap; }
+    .pass     { background: #dcfce7; color: #166534; font-weight: 700; border-radius: 6px;
+                padding: .2rem .6rem; font-size: .8rem; white-space: nowrap; display: inline-block; }
+    .fail     { background: #fee2e2; color: #991b1b; font-weight: 700; border-radius: 6px;
+                padding: .2rem .6rem; font-size: .8rem; white-space: nowrap; display: inline-block; }
+    .skip     { background: #fef3c7; color: #92400e; font-weight: 700; border-radius: 6px;
+                padding: .2rem .6rem; font-size: .8rem; white-space: nowrap; display: inline-block; }
+
+    .summary-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .sum-card {
+      background: #fff; border-radius: 12px; padding: 1rem;
+      text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      border-top: 4px solid var(--primary);
+    }
+    .sum-card.green  { border-top-color: var(--success); }
+    .sum-card.red    { border-top-color: var(--danger); }
+    .sum-card.yellow { border-top-color: var(--warning); }
+    .sum-card .n { font-size: 2rem; font-weight: 800; }
+    .sum-card .l { font-size: .75rem; color: var(--muted); font-weight: 600;
+                   text-transform: uppercase; letter-spacing: .05em; margin-top: .2rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+  <div class="brand">💊 SmartMed</div>
+  <nav>
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('medications') }}">💊 My Meds</a>
+    <a href="{{ url_for('add_medicine') }}">➕ Add Med</a>
+    <a href="{{ url_for('history') }}">📋 History</a>
+    <a href="{{ url_for('analytics') }}">📊 Analytics</a>
+    <a href="{{ url_for('tests') }}" class="active">🧪 Tests</a>
+    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+  </nav>
+</header>
+
+<main class="page">
+
+  <div style="margin-bottom:1.4rem;">
+    <h1 style="font-size:1.5rem;font-weight:800;">🧪 Test Case Documentation</h1>
+    <p style="color:var(--muted);font-size:.88rem;">
+      Smart Medication Adherence System — Second Review Test Report.
+      All test cases were executed on the running application against the live SQLite database.
+    </p>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="summary-box">
+    <div class="sum-card green">
+      <div class="n" style="color:var(--success);">12</div>
+      <div class="l">✅ PASS</div>
+    </div>
+    <div class="sum-card red">
+      <div class="n" style="color:var(--danger);">0</div>
+      <div class="l">❌ FAIL</div>
+    </div>
+    <div class="sum-card yellow">
+      <div class="n" style="color:var(--warning);">0</div>
+      <div class="l">⚠️ SKIP</div>
+    </div>
+    <div class="sum-card">
+      <div class="n">12</div>
+      <div class="l">Total Cases</div>
+    </div>
+    <div class="sum-card">
+      <div class="n" style="color:var(--primary);">100%</div>
+      <div class="l">Pass Rate</div>
+    </div>
+  </div>
+
+  <!-- Test table -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="overflow-x:auto;">
+      <table class="tc-table">
+        <thead>
+          <tr>
+            <th>Test ID</th>
+            <th>Description</th>
+            <th>Input</th>
+            <th>Expected Result</th>
+            <th>Actual Result</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- TC01 -->
+          <tr>
+            <td class="tc-id">TC01</td>
+            <td><strong>Patient Login</strong><br>
+              Verify patient can log in with valid credentials</td>
+            <td>Email: <code>patient@test.com</code><br>Password: <code>patient123</code></td>
+            <td>Redirect to Patient Dashboard (HTTP 302 → /dashboard)</td>
+            <td>User authenticated, session created, redirected to /dashboard with today's medications shown</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC02 -->
+          <tr>
+            <td class="tc-id">TC02</td>
+            <td><strong>Add Medication</strong><br>
+              Patient adds a new medication with all required fields</td>
+            <td>Name: Paracetamol, Dosage: 500 mg, Frequency: Once daily,
+              Time: 08:00, Start: today, End: 2026-12-31</td>
+            <td>Medication saved to SQLite, success flash message, appears on medication list</td>
+            <td>Record inserted into <code>medications</code> table, flash "added successfully", visible in /medications list and today's dashboard</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC03 -->
+          <tr>
+            <td class="tc-id">TC03</td>
+            <td><strong>Edit Medication</strong><br>
+              Patient updates dosage and scheduled time of existing medication</td>
+            <td>Edit Paracetamol: change Dosage to 1000 mg, Time to 09:00</td>
+            <td>Record updated in DB, success flash message, new values shown in medication list</td>
+            <td>UPDATE executed on <code>medications</code> table, pending adherence record regenerated, updated values visible</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC04 -->
+          <tr>
+            <td class="tc-id">TC04</td>
+            <td><strong>Delete Medication</strong><br>
+              Patient deletes a medication with modal confirmation</td>
+            <td>Click Delete on Calcium, confirm modal</td>
+            <td>Medication removed from DB along with related adherence records, success flash</td>
+            <td>DELETE cascade executed on <code>adherence</code>, <code>notifications</code> nulled, medication removed; flash "deleted successfully"</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC05 -->
+          <tr>
+            <td class="tc-id">TC05</td>
+            <td><strong>Trigger Reminder (Test Mode)</strong><br>
+              Patient clicks "Test Reminder" button without waiting for scheduled time</td>
+            <td>Click 🔔 Test Reminder on any active medication</td>
+            <td>Reminder card page shown immediately with medication details, TAKEN/MISSED buttons visible, 5-min countdown active</td>
+            <td>/test_reminder/{id} creates/fetches adherence record, redirects to /reminder/{adh_id}, full reminder card rendered</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC06 -->
+          <tr>
+            <td class="tc-id">TC06</td>
+            <td><strong>Confirm TAKEN</strong><br>
+              Patient confirms they have taken the medication</td>
+            <td>Click ✅ TAKEN on reminder card</td>
+            <td>Adherence status updated to "taken", confirmed_at timestamp saved, notification created, dashboard row turns green</td>
+            <td>adherence.status = 'taken', confirmed_at = current timestamp, notification type='taken' inserted, dashboard shows ✅ TAKEN badge</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC07 -->
+          <tr>
+            <td class="tc-id">TC07</td>
+            <td><strong>Confirm MISSED</strong><br>
+              Patient marks a medication dose as missed</td>
+            <td>Click ❌ MISSED on reminder card</td>
+            <td>Adherence status = "missed", missed notification created, dashboard row turns red, caregiver alerted</td>
+            <td>adherence.status = 'missed', notification type='missed' created, unread badge appears for caregiver, caregiver dashboard shows MISSED_DOSE alert</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC08 -->
+          <tr>
+            <td class="tc-id">TC08</td>
+            <td><strong>Caregiver Alert</strong><br>
+              Caregiver dashboard shows missed dose alert with full details</td>
+            <td>Login as caregiver@test.com / caregiver123, view /caregiver</td>
+            <td>Missed dose alert card shows: Patient name, Medicine, Dosage, Scheduled Time, Date, Alert type = MISSED_DOSE</td>
+            <td>Alert cards rendered from notifications JOIN medications; all 6 fields displayed; unread badge shown; "Mark all read" button functional</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC09 -->
+          <tr>
+            <td class="tc-id">TC09</td>
+            <td><strong>Adherence Calculation</strong><br>
+              System correctly computes adherence percentage from DB data</td>
+            <td>2 of 3 doses taken today (e.g., Paracetamol + Vitamin D taken, Calcium missed)</td>
+            <td>Today's Adherence = 67% (2 ÷ 3 × 100), Weekly Adherence computed from last 7 days</td>
+            <td>Formula: Taken / Total × 100. Dashboard ring shows 67%, Analytics page shows correct weekly %, history summary cards match</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC10 -->
+          <tr>
+            <td class="tc-id">TC10</td>
+            <td><strong>History Display with Filters</strong><br>
+              Adherence history page shows correct records with filter tabs</td>
+            <td>Visit /history, switch filters: Today / This Week / This Month / All Time</td>
+            <td>Records filtered by date range, correct counts per filter, 7-day chart shows accurate bar heights</td>
+            <td>Filter tabs change URL param, records list re-renders from DB, summary cards update (taken/missed/pending counts), chart renders with real data</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC11 -->
+          <tr>
+            <td class="tc-id">TC11</td>
+            <td><strong>Analytics Charts Load</strong><br>
+              Analytics page renders two Chart.js charts from real SQLite data</td>
+            <td>Visit /analytics after completing TC06 and TC07</td>
+            <td>Weekly adherence bar chart renders with day labels and correct % values; Taken vs Missed doughnut chart shows correct proportions; per-medication bars accurate</td>
+            <td>Both Chart.js canvases render. Bar chart: colour-coded green/yellow/red by threshold. Doughnut: green=taken, red=missed, yellow=pending. Per-med breakdown shows individual adherence rates</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+          <!-- TC12 -->
+          <tr>
+            <td class="tc-id">TC12</td>
+            <td><strong>Logout</strong><br>
+              Patient/caregiver session is cleared on logout</td>
+            <td>Click 🚪 Logout in navigation bar</td>
+            <td>Session cleared, redirected to /login, accessing /dashboard redirects back to /login</td>
+            <td>session.clear() called, HTTP 302 → /login, subsequent /dashboard access returns 302 → /login confirming session destroyed</td>
+            <td><span class="pass">✅ PASS</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card" style="margin-top:1.5rem;">
+    <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:.8rem;">📝 Testing Notes</h2>
+    <ul style="font-size:.88rem;color:var(--muted);line-height:1.8;padding-left:1.2rem;">
+      <li>All test cases executed using Flask's built-in <code>test_client()</code> + live SQLite database.</li>
+      <li>Integration test script (<code>integration_test.py</code>) runs 14 automated assertions covering TC01–TC10.</li>
+      <li>TC11 (chart rendering) verified manually in browser — Chart.js renders client-side from server-provided data attributes.</li>
+      <li>TC12 (logout) verified via HTTP redirect check and subsequent protected-route access attempt.</li>
+      <li>Demo data: 3 medications (Paracetamol, Vitamin D, Calcium) with 7 days of pre-seeded adherence history for a non-empty dashboard.</li>
+      <li>Technology: Python 3, Flask 2.x, SQLite3, Werkzeug, Chart.js 4.x, HTML5, CSS3.</li>
+      <li><strong>Disclaimer:</strong> This is a student software prototype for academic demonstration only. Not for clinical use.</li>
+    </ul>
+  </div>
+
+  <!-- Workflow diagram -->
+  <div class="card" style="margin-top:1rem;">
+    <h2 style="font-size:1.05rem;font-weight:700;margin-bottom:.8rem;">🔄 System Workflow</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;font-size:.85rem;font-weight:600;color:#475569;">
+      <span style="background:#e0e7ff;padding:.3rem .75rem;border-radius:8px;">Patient Login</span>
+      <span style="color:var(--primary);">→</span>
+      <span style="background:#e0e7ff;padding:.3rem .75rem;border-radius:8px;">Add Medication</span>
+      <span style="color:var(--primary);">→</span>
+      <span style="background:#fef3c7;padding:.3rem .75rem;border-radius:8px;">Reminder Triggered</span>
+      <span style="color:var(--primary);">→</span>
+      <span style="background:#dcfce7;padding:.3rem .75rem;border-radius:8px;">TAKEN / MISSED</span>
+      <span style="color:var(--primary);">→</span>
+      <span style="background:#e0e7ff;padding:.3rem .75rem;border-radius:8px;">Adherence DB Update</span>
+      <span style="color:var(--primary);">→</span>
+      <span style="background:#fee2e2;padding:.3rem .75rem;border-radius:8px;">Caregiver Alert</span>
+      <span style="color:var(--primary);">→</span>
+      <span style="background:#e0e7ff;padding:.3rem .75rem;border-radius:8px;">Analytics &amp; History</span>
+    </div>
+  </div>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

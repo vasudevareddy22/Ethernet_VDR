@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard – Smart Medication System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── In-app notification banner ── */
+    .due-banner {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 2px solid #f59e0b;
+      border-radius: 14px;
+      padding: 1rem 1.4rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      animation: pulseGlow 2s ease-in-out infinite;
+      box-shadow: 0 4px 20px rgba(245,158,11,.25);
+    }
+    @keyframes pulseGlow {
+      0%,100% { box-shadow: 0 4px 20px rgba(245,158,11,.25); }
+      50%      { box-shadow: 0 4px 30px rgba(245,158,11,.5);  }
+    }
+    .due-banner .bell { font-size: 1.8rem; flex-shrink: 0; }
+    .due-banner .due-info { flex: 1; }
+    .due-banner .due-info strong { display: block; font-size: 1rem; color: #92400e; }
+    .due-banner .due-info span  { font-size: .85rem; color: #78350f; }
+    .due-banner .due-btn {
+      background: #f59e0b;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: .55rem 1.1rem;
+      font-weight: 700;
+      font-size: .9rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      transition: background .2s, transform .1s;
+      flex-shrink: 0;
+    }
+    .due-btn:hover  { background: #d97706; transform: translateY(-1px); }
+    .due-btn:active { transform: translateY(0); }
+
+    /* ── Status row colours ── */
+    tr.row-taken  td { background: #f0fdf4; }
+    tr.row-missed td { background: #fef2f2; }
+    tr.row-pending td { background: #fffbeb; }
+
+    /* ── Test reminder button in table ── */
+    .btn-test {
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: .3rem .7rem;
+      font-size: .78rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      transition: opacity .2s;
+    }
+    .btn-test:hover { opacity: .85; }
+
+    /* ── Status icons ── */
+    .status-icon { font-size: 1.1rem; vertical-align: middle; margin-right: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+  <div class="brand">💊 SmartMed</div>
+  <nav>
+    <a href="{{ url_for('dashboard') }}" class="active">🏠 Dashboard</a>
+    <a href="{{ url_for('medications') }}">💊 My Meds</a>
+    <a href="{{ url_for('add_medicine') }}">➕ Add Med</a>
+    <a href="{{ url_for('history') }}">📋 History</a>
+    <a href="{{ url_for('analytics') }}">📊 Analytics</a>
+    <a href="{{ url_for('tests') }}">🧪 Tests</a>
+    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+    {% if unread_count > 0 %}
+      <span id="notifBadge" class="badge-pill" title="Unread notifications" style="cursor:pointer;">
+        {{ unread_count }}
+      </span>
+    {% endif %}
+  </nav>
+</header>
+
+<!-- CONTENT -->
+<main class="page">
+
+  <!-- Flash messages -->
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Page title row -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1.3rem;">
+    <div>
+      <h1 style="font-size:1.4rem;font-weight:700;">📅 Today's Dashboard</h1>
+      <p style="color:var(--muted);font-size:.87rem;">{{ today }} — {{ session['user_name'] }}</p>
+    </div>
+    <a href="{{ url_for('analytics') }}" class="btn btn-info btn-sm">📊 Full Analytics</a>
+  </div>
+
+  <!-- ─── DUE NOW BANNERS ─── -->
+  {% for r in records %}
+    {% if r.status == 'pending' %}
+      {% set adh_id = r.adh_id %}
+      {% set med_name = r.medicine_name %}
+      {% set sched = r.scheduled_time %}
+      {# Show banner for each pending dose (JS will filter to truly due ones) #}
+      <div class="due-banner due-reminder-banner" data-adh-id="{{ adh_id }}"
+           data-sched="{{ sched }}" style="display:none;">
+        <div class="bell">🔔</div>
+        <div class="due-info">
+          <strong>Medication Due: {{ med_name }}</strong>
+          <span>{{ r.dosage }} — scheduled at {{ sched }} — Please confirm</span>
+        </div>
+        <a href="{{ url_for('reminder', adh_id=adh_id) }}" class="due-btn">
+          Open Reminder
+        </a>
+      </div>
+    {% endif %}
+  {% endfor %}
+
+  <!-- STATS + RING -->
+  <div style="display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start;margin-bottom:1.5rem;">
+
+    <!-- Adherence Ring -->
+    <div class="card" style="flex:0 0 auto;text-align:center;min-width:180px;">
+      <p style="font-weight:600;margin-bottom:.5rem;">Today's Adherence</p>
+      <div class="ring-wrap" style="position:relative;">
+        <svg id="adherenceRing" data-pct="{{ adherence_pct }}" width="130" height="130">
+          <circle class="ring-bg" cx="65" cy="65" r="54"/>
+          <circle class="ring-fg" cx="65" cy="65" r="54"/>
+        </svg>
+        <span id="ringLabel" class="ring-label"></span>
+      </div>
+      <p style="font-size:.8rem;color:var(--muted);margin-top:.2rem;">
+        {{ taken }} of {{ total }} doses taken
+      </p>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stats-grid" style="flex:1;min-width:260px;">
+      <div class="stat-card">
+        <div class="num">{{ total }}</div>
+        <div class="lbl">Total Doses</div>
+      </div>
+      <div class="stat-card success">
+        <div class="num" style="color:var(--success)">{{ taken }}</div>
+        <div class="lbl">✅ Taken</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="num" style="color:var(--danger)">{{ missed }}</div>
+        <div class="lbl">❌ Missed</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="num" style="color:var(--warning)">{{ pending }}</div>
+        <div class="lbl">⏳ Pending</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDICATIONS TABLE -->
+  <div class="card">
+    <div class="section-header">
+      <h2>📅 Today's Medications</h2>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+        <a href="{{ url_for('add_medicine') }}" class="btn btn-primary btn-sm">➕ Add Medicine</a>
+        <a href="{{ url_for('medications') }}"  class="btn btn-outline  btn-sm">💊 Manage All</a>
+        <a href="{{ url_for('history') }}"      class="btn btn-outline  btn-sm">📋 History</a>
+      </div>
+    </div>
+
+    {% if records %}
+    <div style="overflow-x:auto;">
+      <table class="med-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Medicine</th>
+            <th>Dosage</th>
+            <th>Scheduled Time</th>
+            <th>Status</th>
+            <th>Confirm Dose</th>
+            <th>Test Reminder</th>
+            <th>Edit</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr class="row-{{ r.status }}">
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ r.medicine_name }}</strong></td>
+            <td>{{ r.dosage }}</td>
+            <td><strong>{{ r.scheduled_time }}</strong></td>
+
+            <!-- Status badge -->
+            <td>
+              {% if r.status == 'taken' %}
+                <span class="badge badge-taken">✅ TAKEN</span>
+              {% elif r.status == 'missed' %}
+                <span class="badge badge-missed">❌ MISSED</span>
+              {% else %}
+                <span class="badge badge-pending">⏳ PENDING</span>
+              {% endif %}
+            </td>
+
+            <!-- Confirm action -->
+            <td>
+              {% if r.status == 'pending' %}
+                <a href="{{ url_for('confirm', adh_id=r.adh_id, status='taken') }}"
+                   class="btn btn-success btn-sm">✅ Taken</a>
+                <a href="{{ url_for('confirm', adh_id=r.adh_id, status='missed') }}"
+                   class="btn btn-danger btn-sm confirm-missed"
+                   style="margin-left:.3rem;">❌ Missed</a>
+              {% elif r.status == 'taken' %}
+                <span style="color:var(--success);font-size:.82rem;">
+                  Confirmed<br>{{ r.confirmed_at[11:16] if r.confirmed_at }}
+                </span>
+              {% else %}
+                <span style="color:var(--danger);font-size:.82rem;">Marked Missed</span>
+              {% endif %}
+            </td>
+
+            <!-- TEST REMINDER button -->
+            <td>
+              {% if r.status == 'pending' %}
+                <a href="{{ url_for('test_reminder', med_id=r.med_id) }}"
+                   class="btn-test">🔔 Test Reminder</a>
+              {% else %}
+                <span style="color:var(--muted);font-size:.8rem;">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Edit -->
+            <td>
+              <a href="{{ url_for('edit_medicine', med_id=r.med_id) }}"
+                 class="btn btn-warning btn-sm">Edit</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Legend -->
+    <div style="margin-top:1rem;padding-top:.8rem;border-top:1px solid var(--border);
+                display:flex;gap:1.2rem;flex-wrap:wrap;font-size:.82rem;color:var(--muted);">
+      <span><span class="badge badge-pending">⏳ PENDING</span> — not yet confirmed</span>
+      <span><span class="badge badge-taken">✅ TAKEN</span> — dose confirmed</span>
+      <span><span class="badge badge-missed">❌ MISSED</span> — dose missed</span>
+      <span style="color:#7c3aed;font-weight:600;">🔔 Test Reminder</span> — open reminder card instantly
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="icon">🏥</div>
+      <p>No medications scheduled for today.</p>
+      <a href="{{ url_for('add_medicine') }}" class="btn btn-primary" style="margin-top:1rem;">➕ Add Your First Medication</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── ANALYTICS SECTION ── -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:1.5rem;">
+
+    <!-- Weekly adherence bar chart -->
+    <div class="card" style="margin-bottom:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+        <h2 style="font-size:1rem;font-weight:700;">📊 Weekly Adherence ({{ week_pct }}%)</h2>
+        <a href="{{ url_for('analytics') }}" style="font-size:.78rem;color:var(--primary);">Full analytics →</a>
+      </div>
+      <div class="chart-wrap" style="height:180px;">
+        <canvas id="weeklyChart"
+                data-labels='{{ chart_labels | tojson }}'
+                data-values='{{ chart_data  | tojson }}'></canvas>
+      </div>
+      <div style="display:flex;justify-content:space-around;margin-top:.6rem;font-size:.8rem;color:var(--muted);flex-wrap:wrap;gap:.4rem;">
+        <span>Total: <strong>{{ week_total }}</strong></span>
+        <span style="color:var(--success);">Taken: <strong>{{ week_taken }}</strong></span>
+        <span style="color:var(--danger);">Missed: <strong>{{ week_missed }}</strong></span>
+        <span style="color:var(--warning);">Pending: <strong>{{ week_pend }}</strong></span>
+      </div>
+    </div>
+
+    <!-- Taken vs Missed doughnut -->
+    <div class="card" style="margin-bottom:0;">
+      <h2 style="font-size:1rem;font-weight:700;margin-bottom:.8rem;">🥧 Taken vs Missed (7 days)</h2>
+      <div class="chart-wrap" style="height:180px;">
+        <canvas id="donutChart"
+                data-taken="{{ week_taken }}"
+                data-missed="{{ week_missed }}"
+                data-pending="{{ week_pend }}"></canvas>
+      </div>
+      <div style="display:flex;justify-content:center;gap:1.2rem;margin-top:.6rem;font-size:.82rem;flex-wrap:wrap;">
+        <span style="color:var(--success);">&#9632; Taken</span>
+        <span style="color:var(--danger);">&#9632; Missed</span>
+        <span style="color:var(--warning);">&#9632; Pending</span>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+(function () {
+  /* ── Show due-now reminder banners ── */
+  function checkDueBanners() {
+    const now = new Date();
+    document.querySelectorAll('.due-reminder-banner').forEach(function(banner) {
+      const sched = banner.dataset.sched; // "HH:MM"
+      if (!sched) return;
+      const parts = sched.split(':');
+      const schedDate = new Date();
+      schedDate.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+      const diffMin = (now - schedDate) / 60000;
+      // Show banner if 0..60 min past schedule
+      if (diffMin >= 0 && diffMin <= 60) {
+        banner.style.display = 'flex';
+      } else {
+        banner.style.display = 'none';
+      }
+    });
+  }
+
+  checkDueBanners();
+  setInterval(checkDueBanners, 60000); // re-check every minute
+
+  /* ── Mark notification badge as read on click ── */
+  const badge = document.getElementById('notifBadge');
+  if (badge) {
+    badge.addEventListener('click', function () {
+      fetch('/api/notifications/read', { method: 'POST' })
+        .then(function() { badge.remove(); })
+        .catch(function() {});
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

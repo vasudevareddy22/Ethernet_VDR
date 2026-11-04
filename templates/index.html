@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Network AI | Threat Defense — Enterprise SOC/SIEM Anomaly Detection</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- ══════════════════════════════════════════
+       SIDEBAR NAVIGATION
+  ══════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title">Network AI</span>
+        <span class="logo-sub">Threat Defense SOC</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Monitoring</div>
+      <div class="nav-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" data-page="monitor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+        </svg>
+        <span>Live Monitoring</span>
+      </div>
+      <div class="nav-item" data-page="traffic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span>Traffic Investigation</span>
+      </div>
+
+      <div class="nav-section-label">AI &amp; Detection</div>
+      <div class="nav-item" data-page="agent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><rect x="4" y="12" width="16" height="8" rx="2"/><circle cx="9" cy="16" r="1"/><circle cx="15" cy="16" r="1"/>
+        </svg>
+        <span>AI SOC Agent</span>
+      </div>
+      <div class="nav-item" data-page="detection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+        <span>Detection Lab</span>
+      </div>
+      <div class="nav-item" data-page="alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>Alerts</span>
+      </div>
+
+      <div class="nav-section-label">Analytics &amp; Insights</div>
+      <div class="nav-item" data-page="reports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <span>Reports</span>
+      </div>
+      <div class="nav-item" data-page="performance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        <span>Model Performance</span>
+      </div>
+      <div class="nav-item" data-page="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>Settings</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-dot"></div>
+      <div class="status-text">Engine: <strong>Active (Localhost)</strong></div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════
+       MAIN APP WRAPPER
+  ══════════════════════════════════════════ -->
+  <main class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <h1 class="topbar-title" id="topbarTitle">Dashboard</h1>
+      <div class="topbar-right">
+        <span class="badge-live">SYSTEM ACTIVE</span>
+        <button class="btn btn-secondary btn-sm" onclick="loadDashboard()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+    </header>
+
+    <div class="content-area">
+
+      <!-- ══════════════════════════════════════════
+           PAGE 1: DASHBOARD
+      ══════════════════════════════════════════ -->
+      <section id="page-dashboard" class="page-section active">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>Security Operations Overview</h2>
+            <p>Real-time enterprise network telemetry and AI-driven threat classification</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary btn-sm" onclick="navigate('detection')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Open Detection Lab
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card" style="--accent-color: var(--accent); --icon-bg: rgba(56,189,248,.1);">
+            <div class="metric-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <div>
+              <div class="metric-value" id="metricPredictions">—</div>
+              <div class="metric-label">Total Predictions Evaluated</div>
+            </div>
+            <div class="metric-delta up">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="18 15 12 9 6 15"/></svg>
+              Live SQL Telemetry
+            </div>
+          </div>
+
+          <div class="metric-card" style="--accent-color: var(--critical); --icon-bg: rgba(239,68,68,.1);">
+            <div class="metric-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div>
+              <div class="metric-value" id="metricAttacks" style="color:var(--critical)">—</div>
+              <div class="metric-label">Attacks / Anomalies Detected</div>
+            </div>
+            <div class="metric-delta down">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="6 9 12 15 18 9"/></svg>
+              Malicious Flagged
+            </div>
+          </div>
+
+          <div class="metric-card" style="--accent-color: var(--warning); --icon-bg: rgba(245,158,11,.1);">
+            <div class="metric-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div>
+              <div class="metric-value" id="metricAlerts" style="color:var(--warning)">—</div>
+              <div class="metric-label">Active Open Alerts</div>
+            </div>
+            <div class="metric-delta">
+              <span style="color:var(--text-secondary)">Awaiting SOC triage</span>
+            </div>
+          </div>
+
+          <div class="metric-card" style="--accent-color: var(--success); --icon-bg: rgba(45,212,191,.1);">
+            <div class="metric-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <div>
+              <div class="metric-value" id="metricAccuracy" style="color:var(--success)">—</div>
+              <div class="metric-label">Model Test Accuracy</div>
+            </div>
+            <div class="metric-delta up">
+              <span style="color:var(--success)">NSL-KDD Held-Out Split</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Network Telemetry & Anomaly Trend (24h)</span>
+              <span class="tag">Hourly Granularity</span>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:250px">
+                <canvas id="trafficChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Alert Severity Breakdown</span>
+              <span class="tag">By Impact Level</span>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:250px">
+                <canvas id="severityChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Grid: Recent Alerts & Model Status -->
+        <div class="bottom-grid">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Recent High-Priority Incident Alerts</span>
+              <button class="btn btn-secondary btn-sm" onclick="navigate('alerts')">View All Alerts →</button>
+            </div>
+            <div class="card-body">
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Alert ID</th>
+                      <th>Time</th>
+                      <th>Severity</th>
+                      <th>Description</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentAlertsBody">
+                    <tr><td colspan="5"><div class="spinner-wrap"><div class="spinner"></div></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">AI Engine Status</span>
+              <span class="tag">Online</span>
+            </div>
+            <div class="card-body">
+              <div class="model-status-grid">
+                <div class="model-status-row">
+                  <span class="mskey">Primary Model</span>
+                  <span class="msval" id="msModelType">Random Forest</span>
+                </div>
+                <div class="model-status-row">
+                  <span class="mskey">Unsupervised Detector</span>
+                  <span class="msval">Isolation Forest (Active)</span>
+                </div>
+                <div class="model-status-row">
+                  <span class="mskey">Features Dimension</span>
+                  <span class="msval" id="msFeatures">41 Features</span>
+                </div>
+                <div class="model-status-row">
+                  <span class="mskey">Model Version</span>
+                  <span class="msval" id="msModelVersion">rf_v1.0</span>
+                </div>
+                <div class="model-status-row">
+                  <span class="mskey">Inference State</span>
+                  <span class="msval"><span class="dot dot-green"></span> <span id="msModelStatus">Loaded & Active</span></span>
+                </div>
+                <div class="model-status-row">
+                  <span class="mskey">Database Engine</span>
+                  <span class="msval"><span class="dot dot-green"></span> SQLite WAL Mode</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           PAGE: LIVE NETWORK MONITORING
+      ══════════════════════════════════════════ -->
+      <section id="page-monitor" class="page-section">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>Live Network Traffic Monitoring</h2>
+            <p>Real-time packet capture, bidirectional connection aggregation, and automated ML threat classification</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary btn-sm" id="btnStartCapture" onclick="startLiveCapture()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Start Monitoring
+            </button>
+            <button class="btn btn-secondary btn-sm hidden" id="btnStopCapture" onclick="stopLiveCapture()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="6" y="6" width="12" height="12"/></svg>
+              Stop Monitoring
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="loadLiveFlows()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh Table
+            </button>
+          </div>
+        </div>
+
+        <!-- Monitoring Controls & Telemetry Overview -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <span class="card-title">Packet Sniffer Engine &amp; Interface Selection</span>
+            <span class="tag" id="liveMonitorStatusBadge">INACTIVE</span>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+              <div style="flex:1;min-width:260px">
+                <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px">Select Network Interface</label>
+                <select id="monitorInterfaceSelect" class="filter-select" style="width:100%">
+                  <option value="">Default Host Interface</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding-top:14px">
+                <div>
+                  <span style="font-size:11px;color:var(--text-secondary);display:block">Captured Packets</span>
+                  <span style="font-size:18px;font-weight:700;color:var(--accent)" id="livePacketCount">0</span>
+                </div>
+                <div>
+                  <span style="font-size:11px;color:var(--text-secondary);display:block">Active Sessions</span>
+                  <span style="font-size:18px;font-weight:700;color:var(--success)" id="liveFlowCount">0</span>
+                </div>
+                <div>
+                  <span style="font-size:11px;color:var(--text-secondary);display:block">Anomalies Detected</span>
+                  <span style="font-size:18px;font-weight:700;color:var(--critical)" id="liveAnomalyCount">0</span>
+                </div>
+              </div>
+            </div>
+            <div id="liveDriverNotice" class="notice-box" style="margin-top:14px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent);flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span><strong>Packet Capture Architecture:</strong> Live packets are captured via Scapy and aggregated into connection flows using <code>traffic_processor.py</code> before scoring. If Npcap is missing, use CSV Traffic Investigation for full offline analysis.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-body" style="padding:16px 20px">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+              <div class="search-input-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="monitorSearchInput" class="form-control" placeholder="Search by IP, service, attack category..." oninput="filterMonitorFlows()" />
+              </div>
+
+              <select id="monitorFilterStatus" class="filter-select" onchange="filterMonitorFlows()">
+                <option value="all">Classification: All</option>
+                <option value="safe">Safe / Normal</option>
+                <option value="suspicious">Suspicious</option>
+                <option value="attack">Malicious Attack</option>
+              </select>
+
+              <select id="monitorFilterSeverity" class="filter-select" onchange="filterMonitorFlows()">
+                <option value="all">Severity: All</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+
+              <select id="monitorFilterProtocol" class="filter-select" onchange="filterMonitorFlows()">
+                <option value="all">Protocol: All</option>
+                <option value="tcp">TCP</option>
+                <option value="udp">UDP</option>
+                <option value="icmp">ICMP</option>
+              </select>
+
+              <select id="monitorFilterDirection" class="filter-select" onchange="filterMonitorFlows()">
+                <option value="all">Direction: All</option>
+                <option value="inbound">Inbound</option>
+                <option value="outbound">Outbound</option>
+                <option value="internal">Internal</option>
+              </select>
+
+              <button class="btn btn-secondary btn-sm" onclick="resetMonitorFilters()">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Flows Table -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Live Flow Telemetry &amp; Threat Ratings</span>
+            <div style="font-size:12px;color:var(--text-secondary)" id="monitorFlowCountBadge">Showing 0 flows</div>
+          </div>
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Source IP:Port</th>
+                    <th>Dest IP:Port</th>
+                    <th>Protocol / Service</th>
+                    <th>Direction</th>
+                    <th>Packets</th>
+                    <th>Bytes</th>
+                    <th>Flag</th>
+                    <th>Classification</th>
+                    <th>Severity</th>
+                    <th>Threat Category</th>
+                  </tr>
+                </thead>
+                <tbody id="monitorFlowsTableBody">
+                  <tr><td colspan="11"><div class="empty-state"><p>No live packet capture running. Click "Start Monitoring" or upload a CSV in Traffic Investigation.</p></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Flow Pagination -->
+            <div class="pagination">
+              <div class="pagination-info" id="monitorPaginationInfo">Showing 0 flows</div>
+              <div class="pagination-controls">
+                <button class="btn btn-secondary btn-sm" id="monitorBtnPrev" onclick="changeMonitorPage(-1)" disabled>← Previous</button>
+                <span id="monitorPageIndicator" style="font-size:12px;color:var(--text-secondary);align-self:center;padding:0 8px">Page 1 of 1</span>
+                <button class="btn btn-secondary btn-sm" id="monitorBtnNext" onclick="changeMonitorPage(1)" disabled>Next →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           PAGE 2: TRAFFIC ANALYSIS
+      ══════════════════════════════════════════ -->
+      <!-- ══════════════════════════════════════════
+           PAGE 2: TRAFFIC ANALYSIS & CSV INVESTIGATION
+      ══════════════════════════════════════════ -->
+      <section id="page-traffic" class="page-section">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>CSV Traffic Analysis &amp; Threat Investigation</h2>
+            <p>Upload enterprise network CSV logs for multi-vector anomaly detection, risk assessment, and SOC threat intelligence</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm" onclick="loadSampleTraffic('normal')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Demo: Normal (500)
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="loadSampleTraffic('attack')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Demo: Attack (500)
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="loadSampleTraffic('mixed')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20v-20z"/></svg>
+              Demo: Mixed (500)
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. CSV INGESTION & UPLOAD CARD -->
+        <div class="card" style="margin-bottom:24px">
+          <div class="card-header">
+            <span class="card-title">Network Telemetry Ingestion</span>
+            <span class="tag">Max 10 MB • RFC 4180 CSV</span>
+          </div>
+          <div class="card-body">
+            <!-- Hidden input -->
+            <input type="file" id="trafficFileInput" accept=".csv" style="display:none" onchange="handleTrafficFileSelect(this)" />
+
+            <!-- Drag & Drop Zone -->
+            <div class="upload-zone" id="trafficDropZone" onclick="document.getElementById('trafficFileInput').click()">
+              <div class="upload-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <div style="font-size:15px;font-weight:600;color:var(--text-primary)">
+                Drag &amp; Drop Enterprise CSV Log Here, or <span style="color:var(--accent)">Click to Browse</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-secondary)">
+                Supports NSL-KDD datasets, NetFlow/IPFIX exports, or enterprise session logs. Missing IPs handled safely.
+              </div>
+            </div>
+
+            <!-- Selected File Bar -->
+            <div id="trafficFileBar" class="file-preview-strip hidden">
+              <div class="file-preview-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:var(--accent)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div>
+                  <div class="file-preview-name" id="trafficSelectedFilename">traffic_dump.csv</div>
+                  <div class="file-preview-meta" id="trafficSelectedFilesize">124.5 KB</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-secondary btn-sm" onclick="clearTrafficFileSelection()">Remove</button>
+                <button class="btn btn-primary btn-sm" id="btnUploadAnalyze" onclick="executeTrafficUpload()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  Upload &amp; Analyze Telemetry
+                </button>
+              </div>
+            </div>
+
+            <!-- Upload / Analysis Spinner State -->
+            <div id="trafficUploadLoading" class="hidden" style="margin-top:20px;text-align:center;padding:24px;background:rgba(30,45,74,.3);border-radius:var(--radius-sm)">
+              <div class="spinner" style="margin:0 auto 12px"></div>
+              <div style="font-weight:600;font-size:14px;color:var(--accent)" id="trafficLoadingTitle">Ingesting CSV and Extracting Features...</div>
+              <div style="font-size:12px;color:var(--text-secondary);margin-top:4px" id="trafficLoadingSub">Running ML classifier inference, computing threat severities, and generating SOC explanations.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. ACTIVE ANALYSIS DASHBOARD (Hidden until an analysis is loaded) -->
+        <div id="trafficAnalysisDashboard" class="hidden">
+          
+          <!-- Analysis Title & Export Actions -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+            <div>
+              <h3 style="font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px">
+                <span class="dot dot-green"></span>
+                <span id="taActiveFilename">dataset_sample.csv</span>
+              </h3>
+              <div style="font-size:12px;color:var(--text-secondary)" id="taActiveMeta">
+                Analyzed at 2026-10-28 15:40:00 • Model: Random Forest (rf_v1.0)
+              </div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-secondary btn-sm" onclick="downloadActiveOriginalCsv()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Original CSV
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="downloadActiveAnalyzedCsv()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Analyzed Results CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Summary Cards -->
+          <div class="metrics-grid">
+            <div class="metric-card" style="--accent-color: var(--accent); --icon-bg: rgba(56,189,248,.1);">
+              <div class="metric-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div>
+                <div class="metric-value" id="taKpiTotal">—</div>
+                <div class="metric-label">Total Ingested Rows</div>
+              </div>
+              <div class="metric-delta"><span style="color:var(--text-secondary)">100% Evaluated</span></div>
+            </div>
+
+            <div class="metric-card" style="--accent-color: var(--success); --icon-bg: rgba(45,212,191,.1);">
+              <div class="metric-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div>
+                <div class="metric-value" id="taKpiSafe" style="color:var(--success)">—</div>
+                <div class="metric-label">Normal / Safe Traffic</div>
+              </div>
+              <div class="metric-delta up"><span id="taKpiSafePct" style="color:var(--success)">—%</span></div>
+            </div>
+
+            <div class="metric-card" style="--accent-color: var(--critical); --icon-bg: rgba(239,68,68,.1);">
+              <div class="metric-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div>
+                <div class="metric-value" id="taKpiAttack" style="color:var(--critical)">—</div>
+                <div class="metric-label">Attacks Detected</div>
+              </div>
+              <div class="metric-delta"><span id="taKpiAttackPct" style="color:var(--critical)">—%</span></div>
+            </div>
+
+            <div class="metric-card" style="--accent-color: var(--warning); --icon-bg: rgba(245,158,11,.1);">
+              <div class="metric-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <div>
+                <div class="metric-value" id="taKpiSuspicious" style="color:var(--warning)">—</div>
+                <div class="metric-label">Suspicious Anomalies</div>
+              </div>
+              <div class="metric-delta"><span id="taKpiSuspiciousPct" style="color:var(--warning)">—%</span></div>
+            </div>
+          </div>
+
+          <!-- Ground Truth Validation Notice & Confusion Matrix Card (Conditional) -->
+          <div id="taEvaluationCard" class="card hidden" style="margin-bottom:24px;border-color:rgba(45,212,191,.3)">
+            <div class="card-header">
+              <span class="card-title" style="color:var(--success);display:flex;align-items:center;gap:6px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Ground-Truth Benchmark Evaluation (Dataset Labels Present)
+              </span>
+              <span class="tag">Empirical Verification</span>
+            </div>
+            <div class="card-body">
+              <div class="perf-grid" style="margin-bottom:20px">
+                <div class="perf-card">
+                  <div class="perf-val" id="taEvalAcc" style="color:var(--success)">—</div>
+                  <div class="perf-lbl">Accuracy</div>
+                </div>
+                <div class="perf-card">
+                  <div class="perf-val" id="taEvalPrec">—</div>
+                  <div class="perf-lbl">Precision</div>
+                </div>
+                <div class="perf-card">
+                  <div class="perf-val" id="taEvalRecall">—</div>
+                  <div class="perf-lbl">Recall / TPR</div>
+                </div>
+                <div class="perf-card">
+                  <div class="perf-val" id="taEvalF1" style="color:var(--accent)">—</div>
+                  <div class="perf-lbl">F1-Score</div>
+                </div>
+                <div class="perf-card">
+                  <div class="perf-val" id="taEvalFpr" style="color:var(--critical)">—</div>
+                  <div class="perf-lbl">False Positive Rate</div>
+                </div>
+              </div>
+
+              <!-- Confusion Matrix Display -->
+              <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center">
+                <div class="confusion-matrix" style="max-width:320px">
+                  <div class="cm-cell cm-tp">
+                    <div class="cm-val" id="taCmTp">0</div>
+                    <div class="cm-lbl">True Positive (TP)</div>
+                  </div>
+                  <div class="cm-cell cm-fp">
+                    <div class="cm-val" id="taCmFp">0</div>
+                    <div class="cm-lbl">False Positive (FP)</div>
+                  </div>
+                  <div class="cm-cell cm-fn">
+                    <div class="cm-val" id="taCmFn">0</div>
+                    <div class="cm-lbl">False Negative (FN)</div>
+                  </div>
+                  <div class="cm-cell cm-tn">
+                    <div class="cm-val" id="taCmTn">0</div>
+                    <div class="cm-lbl">True Negative (TN)</div>
+                  </div>
+                </div>
+                <div style="flex:1;min-width:280px;font-size:12.5px;color:var(--text-secondary);line-height:1.6">
+                  <strong style="color:var(--text-primary)">Verification Note:</strong> This dataset contains ground-truth labels.
+                  Model classifications were produced strictly using the 41 feature vectors (without seeing the label column).
+                  Metrics above confirm empirical detection fidelity on this upload.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="charts-grid" style="margin-bottom:24px">
+            <!-- Attack Taxonomy Chart -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Threat Taxonomy Breakdown</span>
+                <span class="tag">By Attack Family</span>
+              </div>
+              <div class="card-body">
+                <div class="chart-container" style="height:240px">
+                  <canvas id="taAttackChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Severity Distribution Chart -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Risk Severity Distribution</span>
+                <span class="tag">By Impact Tier</span>
+              </div>
+              <div class="card-body">
+                <div class="chart-container" style="height:240px">
+                  <canvas id="taSeverityChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Second Charts Row: Protocols & IPs -->
+          <div class="charts-grid" style="margin-bottom:24px">
+            <!-- Protocol Breakdown -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Transport Layer Protocols</span>
+                <span class="tag">IP Protocol Distribution</span>
+              </div>
+              <div class="card-body">
+                <div class="chart-container" style="height:240px">
+                  <canvas id="taProtocolChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- IP / Endpoint Analysis -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Network Endpoints &amp; IP Entities</span>
+                <span class="tag" id="taIpTag">Endpoints</span>
+              </div>
+              <div class="card-body">
+                <div id="taIpContent" style="min-height:240px;display:flex;align-items:center;justify-content:center">
+                  <!-- Either chart canvas or friendly disclaimer -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. INVESTIGATION TABLE CARD -->
+          <div class="card" style="margin-bottom:24px">
+            <div class="card-header" style="flex-wrap:wrap;gap:12px">
+              <span class="card-title">Network Connection Telemetry &amp; Threat Records</span>
+              <div style="font-size:12px;color:var(--text-secondary)" id="taRecordCountBadge">Showing 0 of 0 records</div>
+            </div>
+            <div class="card-body">
+              
+              <!-- Search & Filter Controls -->
+              <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+                <div class="search-input-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <input type="text" id="taSearchInput" class="form-control" placeholder="Search service, flag, IP, attack type..." oninput="handleTaSearch()" />
+                </div>
+
+                <select id="taFilterStatus" class="filter-select" onchange="handleTaFilterChange()">
+                  <option value="all">Classification: All</option>
+                  <option value="Safe">Safe / Normal</option>
+                  <option value="Suspicious">Suspicious</option>
+                  <option value="Attack">Malicious Attack</option>
+                </select>
+
+                <select id="taFilterSeverity" class="filter-select" onchange="handleTaFilterChange()">
+                  <option value="all">Severity: All</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+
+                <select id="taFilterProtocol" class="filter-select" onchange="handleTaFilterChange()">
+                  <option value="all">Protocol: All</option>
+                  <option value="tcp">TCP</option>
+                  <option value="udp">UDP</option>
+                  <option value="icmp">ICMP</option>
+                </select>
+
+                <button class="btn btn-secondary btn-sm" onclick="resetTaFilters()">Reset Filters</button>
+              </div>
+
+              <!-- Records Table -->
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:50px">#</th>
+                      <th>Protocol / Service</th>
+                      <th>Flag</th>
+                      <th>Source IP:Port</th>
+                      <th>Dest IP:Port</th>
+                      <th>Ground Truth</th>
+                      <th>ML Classification</th>
+                      <th>Confidence</th>
+                      <th>Severity</th>
+                      <th>Threat Category</th>
+                      <th style="text-align:right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="taRecordsTableBody">
+                    <tr><td colspan="11"><div class="spinner-wrap"><div class="spinner"></div></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination Controls -->
+              <div class="pagination">
+                <div class="pagination-info" id="taPaginationInfo">Showing 0-0 of 0 records</div>
+                <div class="pagination-controls">
+                  <button class="btn btn-secondary btn-sm" id="taBtnPrev" onclick="changeTaPage(-1)" disabled>← Previous</button>
+                  <span id="taPageIndicator" style="font-size:12px;color:var(--text-secondary);align-self:center;padding:0 8px">Page 1 of 1</span>
+                  <button class="btn btn-secondary btn-sm" id="taBtnNext" onclick="changeTaPage(1)" disabled>Next →</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div> <!-- /#trafficAnalysisDashboard -->
+
+        <!-- 4. PAST ANALYSES HISTORY CARD -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Analysis Run History</span>
+            <button class="btn btn-secondary btn-sm" onclick="loadTrafficHistory()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh History
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Run ID</th>
+                    <th>File Name</th>
+                    <th>Analysis Timestamp</th>
+                    <th>Rows</th>
+                    <th>Safe</th>
+                    <th>Attacks</th>
+                    <th>Suspicious</th>
+                    <th>Ground Truth</th>
+                    <th style="text-align:right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="taHistoryTableBody">
+                  <tr><td colspan="9"><div class="spinner-wrap"><div class="spinner"></div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           PAGE: AI SOC AGENT (THREE-COLUMN CICADA-STYLE SOC LAYOUT)
+      ══════════════════════════════════════════ -->
+      <section id="page-agent" class="page-section">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>AI SOC Analyst &amp; Voice Intelligence</h2>
+            <p>Enterprise AI Cybersecurity Analyst grounded in live network telemetry and multi-turn voice interaction</p>
+          </div>
+          <div class="page-actions">
+            <!-- Central Voice Conversation Button -->
+            <button class="btn btn-primary btn-sm" id="btnToggleVoiceSession" onclick="toggleContinuousVoiceSession()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              <span id="voiceSessionBtnText">Start Voice Conversation</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="clearAgentConversation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Clear Chat
+            </button>
+          </div>
+        </div>
+
+        <!-- 3-Column SOC Agent Workspace -->
+        <div class="agent-workspace-grid">
+
+          <!-- Left Column / Centre Main Chat Panel -->
+          <div class="card agent-chat-card">
+            <div class="card-header agent-chat-header">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="agent-avatar-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><rect x="4" y="12" width="16" height="8" rx="2"/><circle cx="9" cy="16" r="1"/><circle cx="15" cy="16" r="1"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-weight:700;font-size:14.5px;color:var(--text-primary);display:flex;align-items:center;gap:8px">
+                    Network AI | Lead SOC Analyst
+                    <span class="badge badge-normal" id="agentBadgeMode">Local Expert Mode</span>
+                  </div>
+                  <div style="font-size:11.5px;color:var(--text-secondary)">
+                    Grounded in live telemetry, NSL-KDD benchmark, and SQLite threat logs
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <!-- Audio Mute / Speaking Indicator -->
+                <div id="audioVisualizerWrap" class="audio-visualizer-bar hidden">
+                  <span class="vbar"></span><span class="vbar"></span><span class="vbar"></span><span class="vbar"></span><span class="vbar"></span>
+                  <span style="font-size:11px;color:var(--accent);font-weight:600;margin-left:4px" id="voiceStatusText">SPEAKING</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="btnStopSpeech" onclick="stopSpeechSynthesis()" title="Stop Speaking" style="padding:4px 8px">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="6" y="6" width="12" height="12"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Chat Message Stream -->
+            <div class="agent-chat-messages" id="agentChatMessages">
+              <div class="agent-message-row assistant">
+                <div class="msg-bubble assistant">
+                  <div class="msg-header">
+                    <span class="msg-sender">AI SOC Analyst</span>
+                    <span class="msg-time">Just now</span>
+                  </div>
+                  <div class="msg-text">
+                    Hello! I am your <strong>Network AI Threat Defense SOC Analyst</strong>. I monitor live packet streams, analyze CSV connection telemetry, investigate DoS/Probe/R2L/U2R anomalies, and provide actionable security recommendations.<br><br>
+                    You can type your query below, click a <strong>Quick Prompt</strong> on the right, or click the <strong>Microphone / Start Voice Conversation</strong> button to speak naturally.
+                  </div>
+                  <div class="msg-actions">
+                    <button class="msg-action-btn" onclick="speakMessageText(this)" title="Listen to answer">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                      Listen
+                    </button>
+                    <button class="msg-action-btn" onclick="copyMessageText(this)" title="Copy text">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Speech-to-Text Interim Bar -->
+            <div id="speechInterimBar" class="speech-interim-strip hidden">
+              <div class="pulse-mic-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+              </div>
+              <span id="speechInterimText">Listening to your voice... Speak clearly into your microphone...</span>
+            </div>
+
+            <!-- Chat Input Bar -->
+            <div class="agent-chat-input-area">
+              <button class="btn btn-secondary btn-icon" id="btnMicInput" onclick="toggleMicrophoneInput()" title="Voice Input (Speech-to-Text)">
+                <svg id="micIconSvg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+              <textarea id="agentTextInput" class="form-control agent-input-field" placeholder="Ask about network attacks, suspicious IPs, or security alerts... (Enter to send, Shift+Enter for new line)" rows="1" onkeydown="handleAgentKeydown(event)"></textarea>
+              <button class="btn btn-primary btn-sm" id="btnSendAgentMsg" onclick="sendAgentMessage()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Send
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Quick Prompts & AI Configuration Panel -->
+          <div class="agent-sidebar-right">
+
+            <!-- Quick Prompts Panel -->
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <span class="card-title">Quick Analyst Prompts</span>
+                <span class="tag">1-Click</span>
+              </div>
+              <div class="card-body" style="padding:12px;display:flex;flex-direction:column;gap:8px">
+                <button class="btn-quick-prompt" onclick="runQuickPrompt('summarize_traffic')">
+                  <span class="qp-icon">📊</span>
+                  <div class="qp-text">
+                    <strong>Summarize Network Traffic</strong>
+                    <span>Total volumes, safe vs attack distribution</span>
+                  </div>
+                </button>
+                <button class="btn-quick-prompt" onclick="runQuickPrompt('investigate_ips')">
+                  <span class="qp-icon">🔍</span>
+                  <div class="qp-text">
+                    <strong>Investigate Suspicious IPs</strong>
+                    <span>Identify high-risk source endpoints</span>
+                  </div>
+                </button>
+                <button class="btn-quick-prompt" onclick="runQuickPrompt('active_attacks')">
+                  <span class="qp-icon">🚨</span>
+                  <div class="qp-text">
+                    <strong>Identify Active Attacks</strong>
+                    <span>Break down DoS, Probe, R2L, U2R threats</span>
+                  </div>
+                </button>
+                <button class="btn-quick-prompt" onclick="runQuickPrompt('incoming_traffic')">
+                  <span class="qp-icon">⬇️</span>
+                  <div class="qp-text">
+                    <strong>Analyze Incoming Traffic</strong>
+                    <span>External intrusion vectors &amp; targeted ports</span>
+                  </div>
+                </button>
+                <button class="btn-quick-prompt" onclick="runQuickPrompt('outgoing_traffic')">
+                  <span class="qp-icon">⬆️</span>
+                  <div class="qp-text">
+                    <strong>Analyze Outgoing Traffic</strong>
+                    <span>Exfiltration checks &amp; outbound beaconing</span>
+                  </div>
+                </button>
+                <button class="btn-quick-prompt" onclick="runQuickPrompt('explain_alerts')">
+                  <span class="qp-icon">⚠️</span>
+                  <div class="qp-text">
+                    <strong>Explain Critical Alerts</strong>
+                    <span>Triage priority queue &amp; high confidence threats</span>
+                  </div>
+                </button>
+                <button class="btn-quick-prompt" onclick="runQuickPrompt('unusual_ports')">
+                  <span class="qp-icon">🔌</span>
+                  <div class="qp-text">
+                    <strong>Detect Unusual Ports</strong>
+                    <span>Non-standard services &amp; port scan patterns</span>
+                  </div>
+                </button>
+                <button class="btn-quick-prompt" onclick="runQuickPrompt('generate_report')">
+                  <span class="qp-icon">📑</span>
+                  <div class="qp-text">
+                    <strong>Generate Security Report</strong>
+                    <span>Formal markdown audit &amp; mitigation advice</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- AI Engine & Voice Configuration Card -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Agent Engine &amp; Speech Config</span>
+                <span class="tag" style="background:rgba(56,189,248,.1);color:var(--accent)">SOC AI v2.1</span>
+              </div>
+              <div class="card-body" style="padding:14px">
+                <div class="model-status-row">
+                  <span class="mskey">Active Provider</span>
+                  <span class="msval" id="agentCfgProvider">Local Rule Engine</span>
+                </div>
+                <div class="model-status-row">
+                  <span class="mskey">Inference Model</span>
+                  <span class="msval" id="agentCfgModel">local-soc-expert</span>
+                </div>
+                <div class="model-status-row">
+                  <span class="mskey">Connection Status</span>
+                  <span class="msval"><span class="dot dot-green"></span> <span id="agentCfgConn">Active (Grounded)</span></span>
+                </div>
+                <div class="model-status-row">
+                  <span class="mskey">Two-Way Voice</span>
+                  <span class="msval"><span class="dot dot-green"></span> Web Speech API</span>
+                </div>
+
+                <div style="margin-top:14px">
+                  <label style="display:block;font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;margin-bottom:6px">Speech Language</label>
+                  <select id="agentSpeechLanguage" class="filter-select" style="width:100%" onchange="changeSpeechLanguage(this.value)">
+                    <option value="en-US">English (United States)</option>
+                    <option value="en-IN" selected>English (India)</option>
+                    <option value="hi-IN">Hindi (हिंदी)</option>
+                    <option value="te-IN">Telugu (తెలుగు)</option>
+                    <option value="ta-IN">Tamil (தமிழ்)</option>
+                  </select>
+                </div>
+
+                <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-size:12px;color:var(--text-secondary)">Auto-Speak Answers</span>
+                  <label class="toggle">
+                    <input type="checkbox" id="chkAutoSpeak" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           PAGE 3: DETECTION LAB
+      ══════════════════════════════════════════ -->
+      <section id="page-detection" class="page-section">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>Interactive Detection Lab</h2>
+            <p>Test individual connection records against the trained Random Forest and Isolation Forest models</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm" onclick="fillForm(SAMPLE_NORMAL)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Load Normal Sample
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="fillForm(SAMPLE_ATTACK)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Load Attack (DoS) Sample
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="clearForm()">Clear Fields</button>
+          </div>
+        </div>
+
+        <!-- Prediction Result Container -->
+        <div id="resultContainer" style="margin-bottom:20px"></div>
+
+        <!-- 41-feature form -->
+        <form id="predictionForm">
+          <!-- Section 1: Basic Connection -->
+          <div class="form-section">
+            <div class="form-section-header" onclick="toggleSection('secBasic')">
+              <h4><span class="section-num">1</span> Basic Connection Features</h4>
+              <span style="font-size:12px;color:var(--text-secondary)">▼</span>
+            </div>
+            <div class="form-section-body" id="secBasic">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="field_duration">Duration (seconds)</label>
+                  <input type="number" step="any" class="form-control" id="field_duration" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_protocol_type">Protocol Type</label>
+                  <select class="form-control" id="field_protocol_type" required>
+                    <option value="tcp" selected>TCP</option>
+                    <option value="udp">UDP</option>
+                    <option value="icmp">ICMP</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="field_service">Network Service</label>
+                  <select class="form-control" id="field_service" required>
+                    <option value="http" selected>http</option>
+                    <option value="ftp">ftp</option>
+                    <option value="ftp_data">ftp_data</option>
+                    <option value="smtp">smtp</option>
+                    <option value="ssh">ssh</option>
+                    <option value="domain">domain (DNS)</option>
+                    <option value="telnet">telnet</option>
+                    <option value="finger">finger</option>
+                    <option value="eco_i">eco_i (ICMP ping)</option>
+                    <option value="ecr_i">ecr_i (ICMP reply)</option>
+                    <option value="private">private</option>
+                    <option value="other">other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="field_flag">Connection Flag</label>
+                  <select class="form-control" id="field_flag" required>
+                    <option value="SF" selected>SF (Normal establishment & close)</option>
+                    <option value="S0">S0 (SYN without reply - SYN flood)</option>
+                    <option value="REJ">REJ (Connection rejected)</option>
+                    <option value="RSTO">RSTO (Reset by originator)</option>
+                    <option value="SH">SH (SYN, reset)</option>
+                    <option value="S1">S1</option>
+                    <option value="S2">S2</option>
+                    <option value="S3">S3</option>
+                    <option value="OTH">OTH</option>
+                    <option value="RSTOS0">RSTOS0</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="field_src_bytes">Source Bytes</label>
+                  <input type="number" step="any" class="form-control" id="field_src_bytes" value="215" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_bytes">Destination Bytes</label>
+                  <input type="number" step="any" class="form-control" id="field_dst_bytes" value="45076" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_land">Land Attack (1=same IP/port)</label>
+                  <input type="number" min="0" max="1" class="form-control" id="field_land" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_wrong_fragment">Wrong Fragments</label>
+                  <input type="number" class="form-control" id="field_wrong_fragment" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_urgent">Urgent Packets</label>
+                  <input type="number" class="form-control" id="field_urgent" value="0" required/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Content Features -->
+          <div class="form-section">
+            <div class="form-section-header" onclick="toggleSection('secContent')">
+              <h4><span class="section-num">2</span> Domain & Host Content Features</h4>
+              <span style="font-size:12px;color:var(--text-secondary)">▼</span>
+            </div>
+            <div class="form-section-body" id="secContent">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="field_hot">Hot Indicators</label>
+                  <input type="number" class="form-control" id="field_hot" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_num_failed_logins">Failed Logins</label>
+                  <input type="number" class="form-control" id="field_num_failed_logins" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_logged_in">Logged In (1=yes, 0=no)</label>
+                  <input type="number" min="0" max="1" class="form-control" id="field_logged_in" value="1" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_num_compromised">Compromised Conditions</label>
+                  <input type="number" class="form-control" id="field_num_compromised" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_root_shell">Root Shell Obtained</label>
+                  <input type="number" min="0" max="1" class="form-control" id="field_root_shell" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_su_attempted">SU Attempted</label>
+                  <input type="number" min="0" max="2" class="form-control" id="field_su_attempted" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_num_root">Root Operations</label>
+                  <input type="number" class="form-control" id="field_num_root" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_num_file_creations">File Creations</label>
+                  <input type="number" class="form-control" id="field_num_file_creations" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_num_shells">Shell Prompts</label>
+                  <input type="number" class="form-control" id="field_num_shells" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_num_access_files">Access Control Files</label>
+                  <input type="number" class="form-control" id="field_num_access_files" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_num_outbound_cmds">Outbound Commands</label>
+                  <input type="number" class="form-control" id="field_num_outbound_cmds" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_is_host_login">Is Host Login</label>
+                  <input type="number" min="0" max="1" class="form-control" id="field_is_host_login" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_is_guest_login">Is Guest Login</label>
+                  <input type="number" min="0" max="1" class="form-control" id="field_is_guest_login" value="0" required/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Time-based Traffic -->
+          <div class="form-section">
+            <div class="form-section-header" onclick="toggleSection('secTraffic')">
+              <h4><span class="section-num">3</span> Time-Window Traffic Features (2-sec window)</h4>
+              <span style="font-size:12px;color:var(--text-secondary)">▼</span>
+            </div>
+            <div class="form-section-body" id="secTraffic">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="field_count">Count (Connections to same host)</label>
+                  <input type="number" class="form-control" id="field_count" value="1" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_srv_count">Srv Count (To same service)</label>
+                  <input type="number" class="form-control" id="field_srv_count" value="1" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_serror_rate">SYN Error Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_serror_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_srv_serror_rate">Srv SYN Error Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_srv_serror_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_rerror_rate">REJ Error Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_rerror_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_srv_rerror_rate">Srv REJ Error Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_srv_rerror_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_same_srv_rate">Same Service Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_same_srv_rate" value="1" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_diff_srv_rate">Diff Service Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_diff_srv_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_srv_diff_host_rate">Srv Diff Host Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_srv_diff_host_rate" value="0" required/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Host-based Traffic -->
+          <div class="form-section">
+            <div class="form-section-header" onclick="toggleSection('secHost')">
+              <h4><span class="section-num">4</span> Host-based Traffic Features (Destination window)</h4>
+              <span style="font-size:12px;color:var(--text-secondary)">▼</span>
+            </div>
+            <div class="form-section-body" id="secHost">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="field_dst_host_count">Dst Host Count</label>
+                  <input type="number" class="form-control" id="field_dst_host_count" value="255" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_host_srv_count">Dst Host Srv Count</label>
+                  <input type="number" class="form-control" id="field_dst_host_srv_count" value="11" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_host_same_srv_rate">Dst Same Srv Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_dst_host_same_srv_rate" value="0.04" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_host_diff_srv_rate">Dst Diff Srv Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_dst_host_diff_srv_rate" value="0.06" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_host_same_src_port_rate">Dst Same Src Port Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_dst_host_same_src_port_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_host_srv_diff_host_rate">Dst Srv Diff Host Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_dst_host_srv_diff_host_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_host_serror_rate">Dst Serror Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_dst_host_serror_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_host_srv_serror_rate">Dst Srv Serror Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_dst_host_srv_serror_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_host_rerror_rate">Dst Rerror Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_dst_host_rerror_rate" value="0" required/>
+                </div>
+                <div class="form-group">
+                  <label for="field_dst_host_srv_rerror_rate">Dst Srv Rerror Rate [0–1]</label>
+                  <input type="number" step="any" min="0" max="1" class="form-control" id="field_dst_host_srv_rerror_rate" value="0" required/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lab-submit">
+            <button type="submit" class="btn btn-primary" id="submitPredictionBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Run Prediction
+            </button>
+          </div>
+        </form>
+
+        <!-- Batch CSV Upload Zone -->
+        <div style="margin-top:36px">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:8px">Batch CSV Telemetry Upload</h3>
+          <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:16px">Upload a CSV file with NSL-KDD column headers (up to 500 records at once) for bulk classification.</p>
+          
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="csvFileInput" accept=".csv" style="display:none"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <p>Drag and drop your network traffic <span>.csv</span> file here, or <span>browse files</span></p>
+            <p style="font-size:11px;color:var(--text-secondary);margin-top:6px">Must include 41 standard NSL-KDD feature headers (duration, protocol_type, service, flag, src_bytes, etc.)</p>
+          </div>
+
+          <div id="uploadProgressWrap" class="hidden" style="margin-top:14px">
+            <div class="progress-bar-wrapper">
+              <div class="progress-fill" id="uploadProgressFill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div id="uploadResults"></div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           PAGE 4: ALERTS
+      ══════════════════════════════════════════ -->
+      <section id="page-alerts" class="page-section">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>Incident & Anomaly Alerts</h2>
+            <p>Triage, acknowledge, and resolve detected threat incidents</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm" onclick="loadAlerts()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh Alerts
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="search-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="alertSearch" class="form-control" placeholder="Search by alert ID, title, or attack type…"/>
+          </div>
+          <select id="alertStatusFilter" class="filter-select">
+            <option value="all">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="acknowledged">Acknowledged</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <select id="alertSeverityFilter" class="filter-select">
+            <option value="all">All Severities</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Alert ID</th>
+                  <th>Timestamp</th>
+                  <th>Severity</th>
+                  <th>Incident Title</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="alertsTableBody">
+                <tr><td colspan="6"><div class="spinner-wrap"><div class="spinner"></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination">
+            <div class="pagination-info" id="paginationInfo">Showing alerts…</div>
+            <div class="pagination-controls" id="paginationControls"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           PAGE 5: REPORTS
+      ══════════════════════════════════════════ -->
+      <section id="page-reports" class="page-section">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>Threat & Anomaly Reports</h2>
+            <p>Generate and export audit-ready security telemetry logs</p>
+          </div>
+        </div>
+
+        <div class="report-stats-grid">
+          <div class="stat-card">
+            <div class="stat-val" id="rptTotal">—</div>
+            <div class="stat-lbl">Evaluated Predictions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="rptAttacks" style="color:var(--critical)">—</div>
+            <div class="stat-lbl">Flagged Attacks</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="rptAttackRate" style="color:var(--warning)">—</div>
+            <div class="stat-lbl">Overall Attack Ratio</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="rptAccuracy" style="color:var(--success)">—</div>
+            <div class="stat-lbl">RF Baseline Accuracy</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Export Predictions to CSV Report</span>
+          </div>
+          <div class="card-body">
+            <div class="date-range-bar">
+              <label for="reportStartDate">Start Date:</label>
+              <input type="date" id="reportStartDate"/>
+              <label for="reportEndDate">End Date:</label>
+              <input type="date" id="reportEndDate"/>
+              <button class="btn btn-primary" onclick="downloadReport()" style="margin-left:auto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download CSV Report
+              </button>
+            </div>
+            <p style="font-size:12px;color:var(--text-secondary)">The exported report contains exact timestamps, 41 features, prediction classes (0=Normal, 1=Attack), confidence probabilities, and Isolation Forest anomaly scores.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           PAGE 6: MODEL PERFORMANCE
+      ══════════════════════════════════════════ -->
+      <section id="page-performance" class="page-section">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>Machine Learning Model Evaluation</h2>
+            <p>Held-out test set performance metrics evaluated on NSL-KDD benchmark (KDDTest+.txt)</p>
+          </div>
+        </div>
+
+        <!-- 5 Performance Cards -->
+        <div class="perf-grid">
+          <div class="perf-card">
+            <div class="perf-val" id="perfAccuracy">—</div>
+            <div class="perf-lbl">Accuracy</div>
+          </div>
+          <div class="perf-card">
+            <div class="perf-val" id="perfPrecision" style="color:var(--success)">—</div>
+            <div class="perf-lbl">Precision</div>
+          </div>
+          <div class="perf-card">
+            <div class="perf-val" id="perfRecall" style="color:var(--warning)">—</div>
+            <div class="perf-lbl">Recall</div>
+          </div>
+          <div class="perf-card">
+            <div class="perf-val" id="perfF1" style="color:var(--accent)">—</div>
+            <div class="perf-lbl">F1-Score</div>
+          </div>
+          <div class="perf-card">
+            <div class="perf-val" id="perfFPR" style="color:var(--critical)">—</div>
+            <div class="perf-lbl">False Positive Rate (FPR)</div>
+          </div>
+        </div>
+
+        <!-- Confusion Matrix & Legend -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Confusion Matrix (Held-out Test: 22,544 Connections)</span>
+          </div>
+          <div class="card-body">
+            <div class="confusion-wrapper">
+              <div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;font-weight:600">Predicted Normal vs. Predicted Attack</div>
+                <div class="confusion-matrix">
+                  <div class="cm-cell cm-tn">
+                    <div class="cm-val" id="cmTN">—</div>
+                    <div class="cm-lbl">True Negative (TN)</div>
+                  </div>
+                  <div class="cm-cell cm-fp">
+                    <div class="cm-val" id="cmFP">—</div>
+                    <div class="cm-lbl">False Positive (FP)</div>
+                  </div>
+                  <div class="cm-cell cm-fn">
+                    <div class="cm-val" id="cmFN">—</div>
+                    <div class="cm-lbl">False Negative (FN)</div>
+                  </div>
+                  <div class="cm-cell cm-tp">
+                    <div class="cm-val" id="cmTP">—</div>
+                    <div class="cm-lbl">True Positive (TP)</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cm-legend-wrap">
+                <div class="cm-legend-item">
+                  <div class="cm-legend-dot" style="background:var(--success)"></div>
+                  <div>
+                    <h5>High Precision (96.7%)</h5>
+                    <p>When the model classifies a packet as an attack, it is virtually certain. Very few false alarms generated for enterprise analysts.</p>
+                  </div>
+                </div>
+                <div class="cm-legend-item">
+                  <div class="cm-legend-dot" style="background:var(--critical)"></div>
+                  <div>
+                    <h5>Low False Positive Rate (2.8%)</h5>
+                    <p>Only 2.8% of legitimate business traffic was incorrectly flagged, protecting regular operations from interruption.</p>
+                  </div>
+                </div>
+                <div class="cm-legend-item">
+                  <div class="cm-legend-dot" style="background:var(--warning)"></div>
+                  <div>
+                    <h5>Zero-Day Attack Generalization</h5>
+                    <p>KDDTest+ includes 17 novel attack categories not present in the training set (e.g., mscan, saint), providing genuine out-of-distribution evaluation.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Architecture & Specifications Grid -->
+        <div class="model-info-grid">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Supervised Random Forest Pipeline</span></div>
+            <div class="card-body">
+              <ul class="info-list">
+                <li><span class="info-key">Algorithm</span><span class="info-val">RandomForestClassifier (100 Trees)</span></li>
+                <li><span class="info-key">Categorical Encoding</span><span class="info-val">OrdinalEncoder (unknown_value=-1)</span></li>
+                <li><span class="info-key">Numerical Scaling</span><span class="info-val">StandardScaler (Zero-mean, Unit-variance)</span></li>
+                <li><span class="info-key">Class Weight</span><span class="info-val">Balanced (compensates class imbalance)</span></li>
+                <li><span class="info-key">Train Split Size</span><span class="info-val">125,973 network records</span></li>
+                <li><span class="info-key">Test Split Size</span><span class="info-val">22,544 held-out records</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">Unsupervised Isolation Forest Engine</span></div>
+            <div class="card-body">
+              <ul class="info-list">
+                <li><span class="info-key">Algorithm</span><span class="info-val">IsolationForest (100 Estimators)</span></li>
+                <li><span class="info-key">Contamination Ratio</span><span class="info-val">0.50 (configured threshold)</span></li>
+                <li><span class="info-key">Metric Type</span><span class="info-val">Decision Function (higher = normal, &lt;0 = anomaly)</span></li>
+                <li><span class="info-key">Pre-scaling</span><span class="info-val">Shared StandardScaler Offsets</span></li>
+                <li><span class="info-key">Role</span><span class="info-val">Complementary zero-day anomaly scoring</span></li>
+                <li><span class="info-key">Integrity</span><span class="info-val">Scores not conflated with attack probability</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           PAGE 7: SETTINGS
+      ══════════════════════════════════════════ -->
+      <section id="page-settings" class="page-section">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>System Configuration & Diagnostics</h2>
+            <p>Operational health parameters, model reload, and student project notes</p>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <div class="card">
+            <div class="card-header"><span class="card-title">AI Engine Management</span></div>
+            <div class="card-body">
+              <div class="setting-row">
+                <div>
+                  <h5>Hot Model Reload</h5>
+                  <p>Reload model pipeline and feature schemas from disk without server restart</p>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="reloadModelBtn" onclick="reloadModel()">Reload Model</button>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <h5>Automated Alert Creation</h5>
+                  <p>Automatically create actionable alerts when predicted probability &ge; 50%</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" checked disabled/>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <h5>Unsupervised Isolation Forest Scans</h5>
+                  <p>Run decision_function score on all single-prediction requests</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" checked disabled/>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">Project Information & Architecture</span></div>
+            <div class="card-body">
+              <ul class="info-list">
+                <li><span class="info-key">Project Title</span><span class="info-val">AI Anomaly Detection in Enterprise Networks</span></li>
+                <li><span class="info-key">Domain</span><span class="info-val">Computer Networks &amp; Cybersecurity</span></li>
+                <li><span class="info-key">Dataset</span><span class="info-val">NSL-KDD Benchmark (KDDTrain+, KDDTest+)</span></li>
+                <li><span class="info-key">Backend</span><span class="info-val">Flask + SQLite (WAL Mode)</span></li>
+                <li><span class="info-key">Frontend</span><span class="info-val">Dark SOC / SIEM (Midnight Navy #0B1020)</span></li>
+                <li><span class="info-key">Visualizations</span><span class="info-val">Chart.js (Telemetry Line + Severity Doughnut)</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-card">
+          <div class="about-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div>
+            <h4 style="font-size:16px;font-weight:700;margin-bottom:4px">Network AI | Threat Defense SOC v2.1.0</h4>
+            <p style="font-size:12.5px;color:var(--text-secondary);line-height:1.5">
+              Developed as a college Computer Networks capstone project demonstrating production-grade ML intrusion detection,
+              standardized preprocessing pipelines, parameterized SQLite audit history, and real-time SOC incident workflows on localhost.
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Record Inspection Modal -->
+    <div id="recordModal" class="modal-backdrop hidden" onclick="if(event.target===this) closeRecordModal()">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;color:var(--accent)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Network Connection Deep Inspection — Record #<span id="modalRowIndex">0</span></span>
+          </div>
+          <button class="toast-close" onclick="closeRecordModal()" style="font-size:20px;cursor:pointer">×</button>
+        </div>
+        <div class="modal-body">
+          <!-- Status Banner -->
+          <div id="modalStatusBanner" style="padding:14px 18px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span id="modalBadgeStatus" class="badge">Classification</span>
+              <span id="modalBadgeSeverity" class="badge">Severity</span>
+              <span id="modalAttackType" style="font-weight:600;font-size:13px">Attack Category</span>
+            </div>
+            <div style="font-size:12px;color:var(--text-secondary)">
+              Probability: <strong id="modalProbability" style="color:var(--text-primary)">0%</strong>
+            </div>
+          </div>
+
+          <!-- Analyst Explanation -->
+          <div class="card" style="padding:16px;background:rgba(30,45,74,.3)">
+            <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+              SOC Threat Intelligence Explanation
+            </div>
+            <p id="modalExplanation" style="font-size:13px;color:var(--text-primary);line-height:1.5">—</p>
+          </div>
+
+          <!-- Feature Breakdown Grid -->
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">
+              Extracted Network Session Attributes (NSL-KDD Schema)
+            </div>
+            <div id="modalFeaturesGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px;max-height:240px;overflow-y:auto;padding-right:6px">
+              <!-- Dynamically populated key-value chips -->
+            </div>
+          </div>
+
+          <!-- Raw JSON Accordion -->
+          <details style="background:rgba(11,16,32,.7);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px">
+            <summary style="font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer">View Raw Ingested Record JSON</summary>
+            <pre id="modalRawJson" style="margin-top:10px;font-family:monospace;font-size:11px;color:var(--accent);max-height:160px;overflow:auto;white-space:pre-wrap;word-break:break-all"></pre>
+          </details>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary btn-sm" onclick="closeRecordModal()">Close Window</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating AI SOC Assistant Launcher -->
+    <button id="floatingAiBtn" class="floating-ai-btn" onclick="toggleFloatingAiDrawer()" title="Open AI SOC Assistant">
+      <div class="floating-ai-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><rect x="4" y="12" width="16" height="8" rx="2"/><circle cx="9" cy="16" r="1"/><circle cx="15" cy="16" r="1"/>
+        </svg>
+      </div>
+      <span class="floating-ai-label">AI SOC Analyst</span>
+    </button>
+
+    <!-- Right-Side Floating Chat Slide-Over Panel -->
+    <div id="aiSideDrawer" class="ai-side-drawer hidden">
+      <div class="ai-drawer-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="agent-avatar-icon" style="width:32px;height:32px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><rect x="4" y="12" width="16" height="8" rx="2"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:13.5px;color:var(--text-primary)">AI SOC Assistant</div>
+            <div style="font-size:11px;color:var(--text-secondary)">Quick Network Investigation</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="navigate('agent')" title="Open Full 3-Column Page" style="padding:4px 8px;font-size:11px">Full View</button>
+          <button class="toast-close" onclick="toggleFloatingAiDrawer()" style="font-size:18px">×</button>
+        </div>
+      </div>
+
+      <div class="ai-drawer-messages" id="drawerChatMessages">
+        <div class="agent-message-row assistant">
+          <div class="msg-bubble assistant" style="font-size:12px">
+            Ask me about any active alert, suspicious IP, or attack anomaly in the database.
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-drawer-input-area">
+        <input type="text" id="drawerTextInput" class="form-control" placeholder="Ask AI Analyst..." onkeydown="if(event.key==='Enter') sendDrawerMessage()" />
+        <button class="btn btn-primary btn-sm" onclick="sendDrawerMessage()">Send</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

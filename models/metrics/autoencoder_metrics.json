@@ -1,0 +1,7 @@
+{
+    "Precision": 0.8344,
+    "Recall": 0.9821,
+    "F1 Score": 0.9022,
+    "Accuracy": 0.8789,
+    "Threshold": 0.022829
+}

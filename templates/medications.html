@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Medications – Smart Medication System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <style>
+    /* Delete confirmation modal */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 2rem;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      text-align: center;
+    }
+    .modal-box .modal-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+    .modal-box h3 { margin-bottom: .4rem; }
+    .modal-box p  { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem; }
+    .modal-actions { display: flex; gap: .8rem; justify-content: center; }
+    /* Status dot */
+    .dot {
+      display: inline-block; width: 10px; height: 10px;
+      border-radius: 50%; margin-right: 4px; vertical-align: middle;
+    }
+    .dot-active   { background: var(--success); }
+    .dot-inactive { background: var(--muted); }
+    .dot-upcoming { background: var(--warning); }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+  <div class="brand">💊 SmartMed</div>
+  <nav>
+    <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+    <a href="{{ url_for('medications') }}" class="active">💊 My Meds</a>
+    <a href="{{ url_for('add_medicine') }}">➕ Add Med</a>
+    <a href="{{ url_for('history') }}">📋 History</a>
+    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+  </nav>
+</header>
+
+<!-- CONTENT -->
+<main class="page">
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Header -->
+  <div class="section-header" style="margin-bottom:1.5rem;">
+    <div>
+      <h1 style="font-size:1.5rem;">💊 My Medications</h1>
+      <p style="color:var(--muted);">Manage your full medication list.</p>
+    </div>
+    <a href="{{ url_for('add_medicine') }}" class="btn btn-primary">➕ Add New Medication</a>
+  </div>
+
+  <!-- Summary strip -->
+  {% if all_meds %}
+  {% set active_meds  = all_meds | selectattr('start_date', 'le', today) | selectattr('end_date', 'ge', today) | list %}
+  {% set total_count  = all_meds | length %}
+  {% set active_count = active_meds | length %}
+  <div class="stats-grid" style="margin-bottom:1.5rem;">
+    <div class="stat-card">
+      <div class="num">{{ total_count }}</div>
+      <div class="lbl">Total Medications</div>
+    </div>
+    <div class="stat-card success">
+      <div class="num" style="color:var(--success)">{{ active_count }}</div>
+      <div class="lbl">Active Today</div>
+    </div>
+    <div class="stat-card warning">
+      <div class="num" style="color:var(--warning)">{{ total_count - active_count }}</div>
+      <div class="lbl">Inactive / Upcoming</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Medications Table -->
+  <div class="card">
+    {% if all_meds %}
+    <div style="overflow-x:auto;">
+      <table class="med-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Medicine Name</th>
+            <th>Dosage</th>
+            <th>Frequency</th>
+            <th>Time</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Reminder</th>
+            <th style="text-align:center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in all_meds %}
+          {% if m.start_date <= today and m.end_date >= today %}
+            {% set row_status = 'active' %}
+          {% elif m.start_date > today %}
+            {% set row_status = 'upcoming' %}
+          {% else %}
+            {% set row_status = 'inactive' %}
+          {% endif %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>
+              <strong>{{ m.medicine_name }}</strong>
+            </td>
+            <td>{{ m.dosage }}</td>
+            <td><span style="font-size:.85rem;color:var(--muted);">{{ m.frequency }}</span></td>
+            <td>
+              <strong>{{ m.scheduled_time }}</strong>
+            </td>
+            <td style="font-size:.85rem;">{{ m.start_date }}</td>
+            <td style="font-size:.85rem;">{{ m.end_date }}</td>
+            <td>
+              {% if row_status == 'active' %}
+                <span class="badge badge-taken">Active</span>
+              {% elif row_status == 'upcoming' %}
+                <span class="badge badge-pending">Upcoming</span>
+              {% else %}
+                <span class="badge" style="background:#f1f5f9;color:var(--muted);">Expired</span>
+              {% endif %}
+            </td>
+            <!-- Test Reminder -->
+            <td>
+              {% if row_status == 'active' %}
+                <a href="{{ url_for('test_reminder', med_id=m.id) }}"
+                   style="background:#7c3aed;color:#fff;border-radius:8px;padding:.3rem .65rem;
+                          font-size:.78rem;font-weight:700;text-decoration:none;display:inline-block;">
+                  🔔 Test Reminder
+                </a>
+              {% else %}
+                <span style="color:var(--muted);font-size:.8rem;">—</span>
+              {% endif %}
+            </td>
+            <td style="text-align:center;white-space:nowrap;">
+              <a href="{{ url_for('edit_medicine', med_id=m.id) }}"
+                 class="btn btn-warning btn-sm">Edit</a>
+              <button type="button"
+                      class="btn btn-danger btn-sm"
+                      style="margin-left:.3rem;"
+                      onclick="confirmDelete({{ m.id }}, '{{ m.medicine_name | e }}')">
+                Delete
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="icon">💊</div>
+      <p>You have no medications yet.</p>
+      <a href="{{ url_for('add_medicine') }}" class="btn btn-primary" style="margin-top:1rem;">➕ Add Your First Medication</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Today's Schedule (quick view) -->
+  {% if all_meds %}
+  {% set todays = [] %}
+  {% for m in all_meds %}{% if m.start_date <= today and m.end_date >= today %}{% set _ = todays.append(m) %}{% endif %}{% endfor %}
+  <div class="card">
+    <div class="section-header">
+      <h2 style="font-size:1.1rem;">📅 Today's Schedule</h2>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-sm">Go to Dashboard</a>
+    </div>
+    {% if todays %}
+    <div style="overflow-x:auto;">
+      <table class="med-table">
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th>Dosage</th>
+            <th>Scheduled Time</th>
+            <th>Frequency</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in todays | sort(attribute='scheduled_time') %}
+          <tr>
+            <td><strong>{{ m.medicine_name }}</strong></td>
+            <td>{{ m.dosage }}</td>
+            <td><strong>{{ m.scheduled_time }}</strong></td>
+            <td><span style="font-size:.85rem;color:var(--muted);">{{ m.frequency }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:2rem 1rem;">
+      <p>No medications active today.</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</main>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-icon">🗑️</div>
+    <h3>Delete Medication?</h3>
+    <p id="deleteModalText">This will permanently remove the medication and all its adherence records.</p>
+    <div class="modal-actions">
+      <form id="deleteForm" method="POST" action="">
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+      </form>
+      <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  function confirmDelete(medId, medName) {
+    document.getElementById('deleteModalText').textContent =
+      'Are you sure you want to delete "' + medName + '"? This will also remove all its adherence history.';
+    document.getElementById('deleteForm').action = '/delete_medicine/' + medId;
+    document.getElementById('deleteModal').classList.add('open');
+  }
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('open');
+  }
+  // Close on overlay click
+  document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+  });
+</script>
+</body>
+</html>
